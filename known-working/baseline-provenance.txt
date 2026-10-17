@@ -1,0 +1,29 @@
+RK61 all-mode baseline handoff
+Snapshot: 2026-10-17T16:43:43+02:00
+
+SMK upstream: https://github.com/karstx/smk.git
+SMK upstream HEAD: 69373bbb633bd1159f4541f486ff7506563a38ec
+
+Local Git status (new board/.clangd are included in the source archive):
+ M src/keyboards/meson.build
+ M src/sino51lib/flash.c
+ M src/smk/usb.c
+?? .clangd
+?? src/keyboards/royalkludge-rk61/
+
+Tools:
+SDCC : mcs51/z80/z180/r2k/r2ka/r3ka/r4k/r5k/r6k/sm83/tlcs90/ez80/z80n/r800/ds390/pic16/pic14/TININative/ds400/hc08/s08/stm8/pdk13/pdk14/pdk15/mos6502/mos65c02/f8/f8l 4.6.0 #16555 (Linux)
+published under GNU General Public License (GPL)
+1.12.1
+Python 3.11.15
+sinowisp 2.1.0
+disasm51 1.0.2
+
+Build: buildtype=debug, isp=enabled, sleep=disabled
+Target: royalkludge-rk61-rf-test_default_smk.hex
+Validation: 16 tests passed; rebuilt payload exactly matches owner-tested image.
+Hardware reports: USB, Fn layer, LEDs, original dongle and Bluetooth working.
+No firmware was flashed during handoff/documentation.
+
+Baseline image SHA-256:
+3acda448a10008ebb9f2867fed494cef5d1bfae44689d5c42176a69164f63430  known-working/baseline-all-modes.bin

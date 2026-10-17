@@ -1,0 +1,46 @@
+# Machine-local tool installations and environments
+/venv/
+/.venv/
+/toolchain/
+.direnv/
+
+# Reproducible build products, never the firmware source or build scripts
+/build/
+/build-*/
+/smk/build*/
+target/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.cache/
+
+# Generated root-level flash candidates and duplicate old test images.
+# Reviewed/tested recovery artifacts under known-working/ ARE tracked.
+/candidate-*.bin
+/candidate-*.hex
+/rk61-*.bin
+
+# Device-specific stock backups and disassemblies: keep offline backups.
+# The old handoff bundle also embeds these files; ignoring only *.bin is not enough.
+/stock-*.bin
+/stock.asm
+/radio.asm
+/known-working/baseline-all-modes-handoff.tar.gz
+
+# Local secrets; templates can be shared deliberately
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+id_rsa
+id_ed25519
+
+# Editor/OS temporary files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~

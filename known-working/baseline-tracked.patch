@@ -1,0 +1,59 @@
+diff --git a/src/keyboards/meson.build b/src/keyboards/meson.build
+index 17fc53b..2c1a90e 100644
+--- a/src/keyboards/meson.build
++++ b/src/keyboards/meson.build
+@@ -1,6 +1,7 @@
+ inc_base += meson.current_source_dir()
+ 
+ subdir('example')
++subdir('royalkludge-rk61')
+ subdir('nuphy-air60')
+ subdir('eyooso-z11')
+ subdir('genesis-thor-300')
+diff --git a/src/sino51lib/flash.c b/src/sino51lib/flash.c
+index 1f818ef..f8d6564 100644
+--- a/src/sino51lib/flash.c
++++ b/src/sino51lib/flash.c
+@@ -19,8 +19,8 @@ void flash_read_into(flash_window_t window, uint16_t addr, __xdata uint8_t *dst,
+     {
+         FLASHCON = FLASHCON_FOR(window);
+         for (uint8_t i = 0; i < len; i++) {
+-            __code uint8_t *p = (__code uint8_t *)(addr + i);
+-            dst[i]            = *p;
++            const __code uint8_t *p = (const __code uint8_t *)(addr + i);
++            dst[i]                  = *p;
+         }
+         FLASHCON = 0;
+     }
+@@ -34,7 +34,7 @@ bool flash_matches(flash_window_t window, uint16_t addr, const __xdata uint8_t *
+     {
+         FLASHCON = FLASHCON_FOR(window);
+         for (uint8_t i = 0; i < len; i++) {
+-            __code uint8_t *p = (__code uint8_t *)(addr + i);
++            const __code uint8_t *p = (const __code uint8_t *)(addr + i);
+             if (*p != src[i]) {
+                 same = false;
+                 break;
+diff --git a/src/smk/usb.c b/src/smk/usb.c
+index 91c63f7..30e9812 100644
+--- a/src/smk/usb.c
++++ b/src/smk/usb.c
+@@ -947,12 +947,12 @@ static void usb_get_descriptor_handler(struct usb_req_setup *req)
+     uint8_t               index = req->wValue & 0xff;
+     usb_descriptor_set_c *set   = &usb_descriptor_set;
+ 
+-#define APPEND(addr, length)                          \
+-    do {                                              \
+-        for (uint16_t _i = 0; _i < (length); _i++) {  \
+-            buf[_i] = ((__code uint8_t *)(addr))[_i]; \
+-        }                                             \
+-        buf += (length);                              \
++#define APPEND(addr, length)                                \
++    do {                                                    \
++        for (uint16_t _i = 0; _i < (length); _i++) {        \
++            buf[_i] = ((const __code uint8_t *)(addr))[_i]; \
++        }                                                   \
++        buf += (length);                                    \
+     } while (0)
+ 
+ #define APPEND_DESC(desc) APPEND(desc, (desc)->bLength)

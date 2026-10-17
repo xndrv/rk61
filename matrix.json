@@ -1,0 +1,463 @@
+{
+  "sha256": "8378056391aacc8705c45179525863485a730a214d220e4d43fdf98606815833",
+  "column_pins": [
+    "P6.0",
+    "P6.1",
+    "P6.2",
+    "P6.3",
+    "P6.4",
+    "P6.5",
+    "P6.6",
+    "P6.7",
+    "P5.0",
+    "P5.1",
+    "P5.2",
+    "P5.7",
+    "P4.0",
+    "P4.2"
+  ],
+  "row_pins": [
+    "P7.1",
+    "P7.2",
+    "P7.3",
+    "P5.3",
+    "P5.4"
+  ],
+  "select_level": "low",
+  "pressed_level": "low",
+  "matrix": [
+    [
+      {
+        "key": "Esc",
+        "modifier": 0,
+        "usage": 41,
+        "record_address": "0xC604"
+      },
+      {
+        "key": "1",
+        "modifier": 0,
+        "usage": 30,
+        "record_address": "0xC61C"
+      },
+      {
+        "key": "2",
+        "modifier": 0,
+        "usage": 31,
+        "record_address": "0xC634"
+      },
+      {
+        "key": "3",
+        "modifier": 0,
+        "usage": 32,
+        "record_address": "0xC64C"
+      },
+      {
+        "key": "4",
+        "modifier": 0,
+        "usage": 33,
+        "record_address": "0xC664"
+      },
+      {
+        "key": "5",
+        "modifier": 0,
+        "usage": 34,
+        "record_address": "0xC67C"
+      },
+      {
+        "key": "6",
+        "modifier": 0,
+        "usage": 35,
+        "record_address": "0xC694"
+      },
+      {
+        "key": "7",
+        "modifier": 0,
+        "usage": 36,
+        "record_address": "0xC6AC"
+      },
+      {
+        "key": "8",
+        "modifier": 0,
+        "usage": 37,
+        "record_address": "0xC6C4"
+      },
+      {
+        "key": "9",
+        "modifier": 0,
+        "usage": 38,
+        "record_address": "0xC6DC"
+      },
+      {
+        "key": "0",
+        "modifier": 0,
+        "usage": 39,
+        "record_address": "0xC6F4"
+      },
+      {
+        "key": "-",
+        "modifier": 0,
+        "usage": 45,
+        "record_address": "0xC70C"
+      },
+      {
+        "key": "=",
+        "modifier": 0,
+        "usage": 46,
+        "record_address": "0xC724"
+      },
+      {
+        "key": "Backspace",
+        "modifier": 0,
+        "usage": 42,
+        "record_address": "0xC73C"
+      }
+    ],
+    [
+      {
+        "key": "Tab",
+        "modifier": 0,
+        "usage": 43,
+        "record_address": "0xC608"
+      },
+      {
+        "key": "Q",
+        "modifier": 0,
+        "usage": 20,
+        "record_address": "0xC620"
+      },
+      {
+        "key": "W",
+        "modifier": 0,
+        "usage": 26,
+        "record_address": "0xC638"
+      },
+      {
+        "key": "E",
+        "modifier": 0,
+        "usage": 8,
+        "record_address": "0xC650"
+      },
+      {
+        "key": "R",
+        "modifier": 0,
+        "usage": 21,
+        "record_address": "0xC668"
+      },
+      {
+        "key": "T",
+        "modifier": 0,
+        "usage": 23,
+        "record_address": "0xC680"
+      },
+      {
+        "key": "Y",
+        "modifier": 0,
+        "usage": 28,
+        "record_address": "0xC698"
+      },
+      {
+        "key": "U",
+        "modifier": 0,
+        "usage": 24,
+        "record_address": "0xC6B0"
+      },
+      {
+        "key": "I",
+        "modifier": 0,
+        "usage": 12,
+        "record_address": "0xC6C8"
+      },
+      {
+        "key": "O",
+        "modifier": 0,
+        "usage": 18,
+        "record_address": "0xC6E0"
+      },
+      {
+        "key": "P",
+        "modifier": 0,
+        "usage": 19,
+        "record_address": "0xC6F8"
+      },
+      {
+        "key": "[",
+        "modifier": 0,
+        "usage": 47,
+        "record_address": "0xC710"
+      },
+      {
+        "key": "]",
+        "modifier": 0,
+        "usage": 48,
+        "record_address": "0xC728"
+      },
+      {
+        "key": "Backslash",
+        "modifier": 0,
+        "usage": 49,
+        "record_address": "0xC740"
+      }
+    ],
+    [
+      {
+        "key": "CapsLock",
+        "modifier": 0,
+        "usage": 57,
+        "record_address": "0xC60C"
+      },
+      {
+        "key": "A",
+        "modifier": 0,
+        "usage": 4,
+        "record_address": "0xC624"
+      },
+      {
+        "key": "S",
+        "modifier": 0,
+        "usage": 22,
+        "record_address": "0xC63C"
+      },
+      {
+        "key": "D",
+        "modifier": 0,
+        "usage": 7,
+        "record_address": "0xC654"
+      },
+      {
+        "key": "F",
+        "modifier": 0,
+        "usage": 9,
+        "record_address": "0xC66C"
+      },
+      {
+        "key": "G",
+        "modifier": 0,
+        "usage": 10,
+        "record_address": "0xC684"
+      },
+      {
+        "key": "H",
+        "modifier": 0,
+        "usage": 11,
+        "record_address": "0xC69C"
+      },
+      {
+        "key": "J",
+        "modifier": 0,
+        "usage": 13,
+        "record_address": "0xC6B4"
+      },
+      {
+        "key": "K",
+        "modifier": 0,
+        "usage": 14,
+        "record_address": "0xC6CC"
+      },
+      {
+        "key": "L",
+        "modifier": 0,
+        "usage": 15,
+        "record_address": "0xC6E4"
+      },
+      {
+        "key": ";",
+        "modifier": 0,
+        "usage": 51,
+        "record_address": "0xC6FC"
+      },
+      {
+        "key": "Quote",
+        "modifier": 0,
+        "usage": 52,
+        "record_address": "0xC714"
+      },
+      {
+        "key": "NonUSHash",
+        "modifier": 0,
+        "usage": 50,
+        "record_address": "0xC72C"
+      },
+      {
+        "key": "Enter",
+        "modifier": 0,
+        "usage": 40,
+        "record_address": "0xC744"
+      }
+    ],
+    [
+      {
+        "key": "LShift",
+        "modifier": 2,
+        "usage": 0,
+        "record_address": "0xC610"
+      },
+      {
+        "key": "Z",
+        "modifier": 0,
+        "usage": 29,
+        "record_address": "0xC628"
+      },
+      {
+        "key": "X",
+        "modifier": 0,
+        "usage": 27,
+        "record_address": "0xC640"
+      },
+      {
+        "key": "C",
+        "modifier": 0,
+        "usage": 6,
+        "record_address": "0xC658"
+      },
+      {
+        "key": "V",
+        "modifier": 0,
+        "usage": 25,
+        "record_address": "0xC670"
+      },
+      {
+        "key": "B",
+        "modifier": 0,
+        "usage": 5,
+        "record_address": "0xC688"
+      },
+      {
+        "key": "N",
+        "modifier": 0,
+        "usage": 17,
+        "record_address": "0xC6A0"
+      },
+      {
+        "key": "M",
+        "modifier": 0,
+        "usage": 16,
+        "record_address": "0xC6B8"
+      },
+      {
+        "key": ",",
+        "modifier": 0,
+        "usage": 54,
+        "record_address": "0xC6D0"
+      },
+      {
+        "key": ".",
+        "modifier": 0,
+        "usage": 55,
+        "record_address": "0xC6E8"
+      },
+      {
+        "key": "/",
+        "modifier": 0,
+        "usage": 56,
+        "record_address": "0xC700"
+      },
+      {
+        "key": "International1",
+        "modifier": 0,
+        "usage": 135,
+        "record_address": "0xC718"
+      },
+      {
+        "key": "NonUSBackslash",
+        "modifier": 0,
+        "usage": 100,
+        "record_address": "0xC730"
+      },
+      {
+        "key": "RShift",
+        "modifier": 32,
+        "usage": 0,
+        "record_address": "0xC748"
+      }
+    ],
+    [
+      {
+        "key": "LCtrl",
+        "modifier": 1,
+        "usage": 0,
+        "record_address": "0xC614"
+      },
+      {
+        "key": "LGUI",
+        "modifier": 8,
+        "usage": 0,
+        "record_address": "0xC62C"
+      },
+      {
+        "key": "LAlt",
+        "modifier": 4,
+        "usage": 0,
+        "record_address": "0xC644"
+      },
+      {
+        "key": "Unused",
+        "modifier": 0,
+        "usage": 0,
+        "record_address": "0xC65C"
+      },
+      {
+        "key": "Unused",
+        "modifier": 0,
+        "usage": 0,
+        "record_address": "0xC674"
+      },
+      {
+        "key": "Space",
+        "modifier": 0,
+        "usage": 44,
+        "record_address": "0xC68C"
+      },
+      {
+        "key": "Unused",
+        "modifier": 0,
+        "usage": 0,
+        "record_address": "0xC6A4"
+      },
+      {
+        "key": "Unused",
+        "modifier": 0,
+        "usage": 0,
+        "record_address": "0xC6BC"
+      },
+      {
+        "key": "RAlt",
+        "modifier": 64,
+        "usage": 0,
+        "record_address": "0xC6D4"
+      },
+      {
+        "key": "Menu",
+        "modifier": 0,
+        "usage": 101,
+        "record_address": "0xC6EC"
+      },
+      {
+        "key": "RCtrl",
+        "modifier": 16,
+        "usage": 0,
+        "record_address": "0xC704"
+      },
+      {
+        "key": "Unused",
+        "modifier": 0,
+        "usage": 0,
+        "record_address": "0xC71C"
+      },
+      {
+        "key": "Unused",
+        "modifier": 0,
+        "usage": 0,
+        "record_address": "0xC734"
+      },
+      {
+        "key": "Fn",
+        "modifier": 0,
+        "usage": 0,
+        "record_address": "0xC74C"
+      }
+    ]
+  ],
+  "status": "Static reconstruction, not electrically or physically tested",
+  "fn_evidence": "0x6670 checks internal RAM 0x5B bit 5 (column 13, original row bit 5)",
+  "ansi_inference": "NonUSHash, NonUSBackslash, International1 are likely unpopulated on this US PCB"
+}

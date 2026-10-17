@@ -1,0 +1,11 @@
+# Normalize source text, but never rewrite tested firmware/archive bytes.
+* text=auto
+*.bin binary
+*.hex -text
+# Patch context whitespace is data; preserve recovery/upstream patches exactly.
+*.patch -text -whitespace
+*.gz binary
+*.zip binary
+*.png binary
+*.jpg binary
+*.gif binary
