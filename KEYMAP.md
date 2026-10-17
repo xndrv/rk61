@@ -8,7 +8,7 @@ The owner reported v3 "seems to work well" and v4 "works perfectly" after flashi
 Their images, HEX files, source snapshots and manifests are preserved under
 `known-working/layout-v3*`, `known-working/layout-v4*`, and now `known-working/layout-v5*`. These positive overall
 reports do not establish measured current/temperature ratings or exhaustive testing.
-See [README.md](README.md) for recovery and flashing precautions.
+See the [developer handoff](docs/HANDOFF.md) for recovery and flashing precautions.
 
 ## Layer keys
 

@@ -1,6 +1,6 @@
 # RK61 project instructions
 
-- Read `README.md` first. It is the current project handoff; the other Markdown files are stage-specific history and detailed evidence.
+- Read `README.md` first for the public overview. Before firmware/recovery work, read `docs/HANDOFF.md`: it is the detailed current handoff. Other stage notes are historical evidence.
 - Work lives in `/home/xander/rk61-recovery/`, with firmware source in `smk/`.
 - Preserve the stock dumps and `known-working/` baseline artifacts. Never overwrite a tested image with a new experiment.
 - The current target is `royalkludge-rk61-rf-test_default_smk.hex` in `smk/build-rf-debug/`; it includes Bluetooth. The default/prototype target is the old wired-only build.

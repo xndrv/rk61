@@ -1,0 +1,155 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 360" role="img" aria-labelledby="title description">
+  <title id="title">RK61 custom firmware — small board, your rules</title>
+  <desc id="description">An illustrated 61-key keyboard with green, blue, magenta and yellow layer keys, and a magenta Esc connection indicator.</desc>
+  <defs>
+    <linearGradient id="background" x2="1" y2="1">
+      <stop stop-color="#0b1020"/><stop offset="1" stop-color="#17243a"/>
+    </linearGradient>
+    <linearGradient id="accent">
+      <stop stop-color="#4ade80"/><stop offset=".35" stop-color="#60a5fa"/><stop offset=".7" stop-color="#e879f9"/><stop offset="1" stop-color="#facc15"/>
+    </linearGradient>
+  </defs>
+  <rect x="1" y="1" width="1198" height="358" rx="22" fill="url(#background)" stroke="#334155"/>
+  <rect x="48" y="39" width="42" height="4" rx="2" fill="url(#accent)"/>
+  <g font-family="ui-monospace, SFMono-Regular, Consolas, monospace">
+    <text x="48" y="75" font-size="16" letter-spacing="2" fill="#94a3b8">RK61 / CUSTOM FIRMWARE</text>
+    <text x="46" y="135" font-size="47" font-weight="700" fill="#f8fafc">SMALL BOARD.</text>
+    <text x="46" y="190" font-size="47" font-weight="700" fill="#67e8f9">YOUR RULES.</text>
+    <text x="48" y="225" font-size="15" fill="#b6c5d8">Custom layers. Original radio. RGB feedback.</text>
+    <rect x="48" y="253" width="61" height="29" rx="6" fill="#1a2b40" stroke="#38506a"/>
+    <text x="78" y="272" text-anchor="middle" font-size="12" fill="#e2e8f0">USB</text>
+    <rect x="119" y="253" width="91" height="29" rx="6" fill="#1a2b40" stroke="#38506a"/>
+    <text x="164" y="272" text-anchor="middle" font-size="12" fill="#e2e8f0">2.4 GHz</text>
+    <rect x="220" y="253" width="134" height="29" rx="6" fill="#1a2b40" stroke="#38506a"/>
+    <text x="287" y="272" text-anchor="middle" font-size="12" fill="#e2e8f0">Bluetooth ×3</text>
+    <text x="48" y="323" font-size="12" letter-spacing="1" fill="#7d94af">BUILT ON SMK · EXPERIMENTAL · BYK916</text>
+    <rect x="618" y="76" width="538" height="213" rx="13" fill="#0d1526" stroke="#42526a"/>
+    <rect x="634" y="91" width="30" height="31" rx="5" fill="#41213f" stroke="#e879f9"/>
+    <text x="649" y="111" text-anchor="middle" fill="#e2e8f0" font-size="11">Esc</text>
+    <rect x="668" y="91" width="30" height="31" rx="5" fill="#192438" stroke="#344158"/>
+    <text x="683" y="111" text-anchor="middle" fill="#e2e8f0" font-size="11">1</text>
+    <rect x="702" y="91" width="30" height="31" rx="5" fill="#192438" stroke="#344158"/>
+    <text x="717" y="111" text-anchor="middle" fill="#e2e8f0" font-size="11">2</text>
+    <rect x="736" y="91" width="30" height="31" rx="5" fill="#192438" stroke="#344158"/>
+    <text x="751" y="111" text-anchor="middle" fill="#e2e8f0" font-size="11">3</text>
+    <rect x="770" y="91" width="30" height="31" rx="5" fill="#192438" stroke="#344158"/>
+    <text x="785" y="111" text-anchor="middle" fill="#e2e8f0" font-size="11">4</text>
+    <rect x="804" y="91" width="30" height="31" rx="5" fill="#192438" stroke="#344158"/>
+    <text x="819" y="111" text-anchor="middle" fill="#e2e8f0" font-size="11">5</text>
+    <rect x="838" y="91" width="30" height="31" rx="5" fill="#192438" stroke="#344158"/>
+    <text x="853" y="111" text-anchor="middle" fill="#e2e8f0" font-size="11">6</text>
+    <rect x="872" y="91" width="30" height="31" rx="5" fill="#192438" stroke="#344158"/>
+    <text x="887" y="111" text-anchor="middle" fill="#e2e8f0" font-size="11">7</text>
+    <rect x="906" y="91" width="30" height="31" rx="5" fill="#192438" stroke="#344158"/>
+    <text x="921" y="111" text-anchor="middle" fill="#e2e8f0" font-size="11">8</text>
+    <rect x="940" y="91" width="30" height="31" rx="5" fill="#192438" stroke="#344158"/>
+    <text x="955" y="111" text-anchor="middle" fill="#e2e8f0" font-size="11">9</text>
+    <rect x="974" y="91" width="30" height="31" rx="5" fill="#192438" stroke="#344158"/>
+    <text x="989" y="111" text-anchor="middle" fill="#e2e8f0" font-size="11">0</text>
+    <rect x="1008" y="91" width="30" height="31" rx="5" fill="#192438" stroke="#344158"/>
+    <text x="1023" y="111" text-anchor="middle" fill="#e2e8f0" font-size="11">−</text>
+    <rect x="1042" y="91" width="30" height="31" rx="5" fill="#192438" stroke="#344158"/>
+    <text x="1057" y="111" text-anchor="middle" fill="#e2e8f0" font-size="11">=</text>
+    <rect x="1076" y="91" width="64" height="31" rx="5" fill="#192438" stroke="#344158"/>
+    <text x="1108" y="111" text-anchor="middle" fill="#e2e8f0" font-size="9">Backspace</text>
+    <rect x="634" y="128" width="47" height="31" rx="5" fill="#192438" stroke="#344158"/>
+    <text x="657.5" y="148" text-anchor="middle" fill="#e2e8f0" font-size="11">Tab</text>
+    <rect x="685" y="128" width="30" height="31" rx="5" fill="#192438" stroke="#344158"/>
+    <text x="700" y="148" text-anchor="middle" fill="#e2e8f0" font-size="11">Q</text>
+    <rect x="719" y="128" width="30" height="31" rx="5" fill="#192438" stroke="#344158"/>
+    <text x="734" y="148" text-anchor="middle" fill="#e2e8f0" font-size="11">W</text>
+    <rect x="753" y="128" width="30" height="31" rx="5" fill="#192438" stroke="#344158"/>
+    <text x="768" y="148" text-anchor="middle" fill="#e2e8f0" font-size="11">E</text>
+    <rect x="787" y="128" width="30" height="31" rx="5" fill="#192438" stroke="#344158"/>
+    <text x="802" y="148" text-anchor="middle" fill="#e2e8f0" font-size="11">R</text>
+    <rect x="821" y="128" width="30" height="31" rx="5" fill="#192438" stroke="#344158"/>
+    <text x="836" y="148" text-anchor="middle" fill="#e2e8f0" font-size="11">T</text>
+    <rect x="855" y="128" width="30" height="31" rx="5" fill="#192438" stroke="#344158"/>
+    <text x="870" y="148" text-anchor="middle" fill="#e2e8f0" font-size="11">Y</text>
+    <rect x="889" y="128" width="30" height="31" rx="5" fill="#192438" stroke="#344158"/>
+    <text x="904" y="148" text-anchor="middle" fill="#e2e8f0" font-size="11">U</text>
+    <rect x="923" y="128" width="30" height="31" rx="5" fill="#192438" stroke="#344158"/>
+    <text x="938" y="148" text-anchor="middle" fill="#e2e8f0" font-size="11">I</text>
+    <rect x="957" y="128" width="30" height="31" rx="5" fill="#192438" stroke="#344158"/>
+    <text x="972" y="148" text-anchor="middle" fill="#e2e8f0" font-size="11">O</text>
+    <rect x="991" y="128" width="30" height="31" rx="5" fill="#192438" stroke="#344158"/>
+    <text x="1006" y="148" text-anchor="middle" fill="#e2e8f0" font-size="11">P</text>
+    <rect x="1025" y="128" width="30" height="31" rx="5" fill="#192438" stroke="#344158"/>
+    <text x="1040" y="148" text-anchor="middle" fill="#e2e8f0" font-size="11">[</text>
+    <rect x="1059" y="128" width="30" height="31" rx="5" fill="#192438" stroke="#344158"/>
+    <text x="1074" y="148" text-anchor="middle" fill="#e2e8f0" font-size="11">]</text>
+    <rect x="1093" y="128" width="47" height="31" rx="5" fill="#192438" stroke="#344158"/>
+    <text x="1116.5" y="148" text-anchor="middle" fill="#e2e8f0" font-size="11">\</text>
+    <rect x="634" y="165" width="55.5" height="31" rx="5" fill="#192438" stroke="#344158"/>
+    <text x="661.75" y="185" text-anchor="middle" fill="#e2e8f0" font-size="11">Caps</text>
+    <rect x="693.5" y="165" width="30" height="31" rx="5" fill="#192438" stroke="#344158"/>
+    <text x="708.5" y="185" text-anchor="middle" fill="#e2e8f0" font-size="11">A</text>
+    <rect x="727.5" y="165" width="30" height="31" rx="5" fill="#192438" stroke="#344158"/>
+    <text x="742.5" y="185" text-anchor="middle" fill="#e2e8f0" font-size="11">S</text>
+    <rect x="761.5" y="165" width="30" height="31" rx="5" fill="#192438" stroke="#344158"/>
+    <text x="776.5" y="185" text-anchor="middle" fill="#e2e8f0" font-size="11">D</text>
+    <rect x="795.5" y="165" width="30" height="31" rx="5" fill="#192438" stroke="#344158"/>
+    <text x="810.5" y="185" text-anchor="middle" fill="#e2e8f0" font-size="11">F</text>
+    <rect x="829.5" y="165" width="30" height="31" rx="5" fill="#192438" stroke="#344158"/>
+    <text x="844.5" y="185" text-anchor="middle" fill="#e2e8f0" font-size="11">G</text>
+    <rect x="863.5" y="165" width="30" height="31" rx="5" fill="#192438" stroke="#344158"/>
+    <text x="878.5" y="185" text-anchor="middle" fill="#e2e8f0" font-size="11">H</text>
+    <rect x="897.5" y="165" width="30" height="31" rx="5" fill="#192438" stroke="#344158"/>
+    <text x="912.5" y="185" text-anchor="middle" fill="#e2e8f0" font-size="11">J</text>
+    <rect x="931.5" y="165" width="30" height="31" rx="5" fill="#192438" stroke="#344158"/>
+    <text x="946.5" y="185" text-anchor="middle" fill="#e2e8f0" font-size="11">K</text>
+    <rect x="965.5" y="165" width="30" height="31" rx="5" fill="#192438" stroke="#344158"/>
+    <text x="980.5" y="185" text-anchor="middle" fill="#e2e8f0" font-size="11">L</text>
+    <rect x="999.5" y="165" width="30" height="31" rx="5" fill="#192438" stroke="#344158"/>
+    <text x="1014.5" y="185" text-anchor="middle" fill="#e2e8f0" font-size="11">;</text>
+    <rect x="1033.5" y="165" width="30" height="31" rx="5" fill="#192438" stroke="#344158"/>
+    <text x="1048.5" y="185" text-anchor="middle" fill="#e2e8f0" font-size="11">'</text>
+    <rect x="1067.5" y="165" width="72.5" height="31" rx="5" fill="#192438" stroke="#344158"/>
+    <text x="1103.75" y="185" text-anchor="middle" fill="#e2e8f0" font-size="11">Enter</text>
+    <rect x="634" y="202" width="72.5" height="31" rx="5" fill="#192438" stroke="#344158"/>
+    <text x="670.25" y="222" text-anchor="middle" fill="#e2e8f0" font-size="11">Shift</text>
+    <rect x="710.5" y="202" width="30" height="31" rx="5" fill="#192438" stroke="#344158"/>
+    <text x="725.5" y="222" text-anchor="middle" fill="#e2e8f0" font-size="11">Z</text>
+    <rect x="744.5" y="202" width="30" height="31" rx="5" fill="#192438" stroke="#344158"/>
+    <text x="759.5" y="222" text-anchor="middle" fill="#e2e8f0" font-size="11">X</text>
+    <rect x="778.5" y="202" width="30" height="31" rx="5" fill="#192438" stroke="#344158"/>
+    <text x="793.5" y="222" text-anchor="middle" fill="#e2e8f0" font-size="11">C</text>
+    <rect x="812.5" y="202" width="30" height="31" rx="5" fill="#192438" stroke="#344158"/>
+    <text x="827.5" y="222" text-anchor="middle" fill="#e2e8f0" font-size="11">V</text>
+    <rect x="846.5" y="202" width="30" height="31" rx="5" fill="#192438" stroke="#344158"/>
+    <text x="861.5" y="222" text-anchor="middle" fill="#e2e8f0" font-size="11">B</text>
+    <rect x="880.5" y="202" width="30" height="31" rx="5" fill="#192438" stroke="#344158"/>
+    <text x="895.5" y="222" text-anchor="middle" fill="#e2e8f0" font-size="11">N</text>
+    <rect x="914.5" y="202" width="30" height="31" rx="5" fill="#192438" stroke="#344158"/>
+    <text x="929.5" y="222" text-anchor="middle" fill="#e2e8f0" font-size="11">M</text>
+    <rect x="948.5" y="202" width="30" height="31" rx="5" fill="#192438" stroke="#344158"/>
+    <text x="963.5" y="222" text-anchor="middle" fill="#e2e8f0" font-size="11">,</text>
+    <rect x="982.5" y="202" width="30" height="31" rx="5" fill="#192438" stroke="#344158"/>
+    <text x="997.5" y="222" text-anchor="middle" fill="#e2e8f0" font-size="11">.</text>
+    <rect x="1016.5" y="202" width="30" height="31" rx="5" fill="#192438" stroke="#344158"/>
+    <text x="1031.5" y="222" text-anchor="middle" fill="#e2e8f0" font-size="11">/</text>
+    <rect x="1050.5" y="202" width="89.5" height="31" rx="5" fill="#192438" stroke="#344158"/>
+    <text x="1095.25" y="222" text-anchor="middle" fill="#e2e8f0" font-size="11">Shift</text>
+    <rect x="634" y="239" width="38.5" height="31" rx="5" fill="#192438" stroke="#344158"/>
+    <text x="653.25" y="259" text-anchor="middle" fill="#e2e8f0" font-size="11">Ctrl</text>
+    <rect x="676.5" y="239" width="38.5" height="31" rx="5" fill="#192438" stroke="#344158"/>
+    <text x="695.75" y="259" text-anchor="middle" fill="#e2e8f0" font-size="11">Alt</text>
+    <rect x="719" y="239" width="38.5" height="31" rx="5" fill="#163b31" stroke="#4ade80"/>
+    <text x="738.25" y="259" text-anchor="middle" fill="#e2e8f0" font-size="11">L1</text>
+    <rect x="761.5" y="239" width="208.5" height="31" rx="5" fill="#192438" stroke="#344158"/>
+    <text x="865.75" y="259" text-anchor="middle" fill="#e2e8f0" font-size="11">Space</text>
+    <rect x="974" y="239" width="38.5" height="31" rx="5" fill="#1c3154" stroke="#60a5fa"/>
+    <text x="993.25" y="259" text-anchor="middle" fill="#e2e8f0" font-size="11">L2</text>
+    <rect x="1016.5" y="239" width="38.5" height="31" rx="5" fill="#192438" stroke="#344158"/>
+    <text x="1035.75" y="259" text-anchor="middle" fill="#e2e8f0" font-size="11">Win</text>
+    <rect x="1059" y="239" width="38.5" height="31" rx="5" fill="#41213f" stroke="#e879f9"/>
+    <text x="1078.25" y="259" text-anchor="middle" fill="#e2e8f0" font-size="11">L3</text>
+    <rect x="1101.5" y="239" width="38.5" height="31" rx="5" fill="#423b20" stroke="#facc15"/>
+    <text x="1120.75" y="259" text-anchor="middle" fill="#e2e8f0" font-size="11">Fn</text>
+    <rect x="635" y="282" width="504" height="3" rx="1.5" fill="url(#accent)"/>
+    <text x="635" y="321" font-size="12" fill="#4ade80">L1 / NAV</text>
+    <text x="765" y="321" font-size="12" fill="#60a5fa">L2 / SYMBOLS</text>
+    <text x="925" y="321" font-size="12" fill="#e879f9">L3 / MEDIA</text>
+    <text x="1074" y="321" font-size="12" fill="#facc15">Fn / SETUP</text>
+  </g>
+</svg>
