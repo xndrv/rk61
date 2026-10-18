@@ -132,7 +132,7 @@ void rk61_radio_init(void)
     P5CR &= (uint8_t)~0x60u; // stock switch/USB-detect inputs
     P5PCR |= 0x60;
     bus_release();
-    pending_tries = 0;
+    pending_tries    = 0;
     last_status_poll = rk61_led_status_clock();
     rk61_battery_init(last_status_poll);
     wait_ms(1500); // allow the separate radio controller to finish its boot
