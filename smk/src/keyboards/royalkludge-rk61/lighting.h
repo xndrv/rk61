@@ -19,13 +19,24 @@ enum rk61_led_colour {
 #define RK61_COLOUR_NORMAL      255u
 #define RK61_COLOUR_CYCLE_COUNT RK61_COLOUR_TEAL
 // Raw PWM counts, not an 8-bit RGB scale. This is still an experimental ceiling.
-// Main lighting boots at 64; Esc always uses the maximum for its selected colour.
+// Main lighting boots at 64; active battery segments use the status maximum.
 #define RK61_LED_MAX_PULSE       256u
 #define RK61_LED_DEFAULT_PULSE   64u
 #define RK61_LED_STATUS_PULSE    RK61_LED_MAX_PULSE
 #define RK61_LED_BRIGHTNESS_STEP 16u
+#define RK61_LED_EMPTY_PULSE     8u
+
+// One atomic byte publishes the gauge to the LED ISR: count 1..5 and low flag.
+// Zero means unknown, not discharged. Earlier diagnostics disable the override.
+#define RK61_BATTERY_UNKNOWN 0u
+#define RK61_BATTERY_LOW     0x80u
+#define RK61_BATTERY_COUNT   0x07u
+#define RK61_STATUS_FRAMES   32u // approximate half-second; scan-timed, not a wall clock
 
 // Called by the LED ISR: return NORMAL to use the user's selected base colour.
 uint8_t rk61_led_override_colour(void);
-// NORMAL disables the Esc override (used by the earlier diagnostic layouts).
+// NORMAL disables all five status keys (earlier diagnostic layouts).
 uint8_t rk61_led_connection_colour(void);
+uint8_t rk61_led_battery_state(void);
+// Atomic scan-derived epoch; advances even with ordinary lighting at zero.
+uint8_t rk61_led_status_clock(void);

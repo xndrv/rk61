@@ -73,7 +73,7 @@ Unassigned keys on the user layers **do nothing**—they don't silently fall thr
 
 → **[See every key and edit the layout](KEYMAP.md)**
 
-### Esc is your mode indicator
+### Esc is your mode indicator (tested v5)
 
 | Esc colour | Selected output |
 |---|---|
@@ -82,6 +82,15 @@ Unassigned keys on the user layers **do nothing**—they don't silently fall thr
 | Magenta | Wired USB |
 
 This shows the **selected route**, not proof that a wireless host is connected. Esc keeps its mode colour across layers and stays at maximum brightness even when the main lighting is at zero.
+
+### New source candidate: five-key battery gauge
+
+The current source extends the display to **Esc, 1, 2, 3, 4**: route-coloured
+battery segments, dim white depleted segments, and blinking Esc at the original
+firmware's low-battery threshold. Unknown/stale readings have their own pattern.
+**The charge bands are experimental, not calibrated percentages.** This candidate
+has passed offline checks but has **not been flashed or hardware-confirmed**;
+the tested v5 image above is unchanged. See [battery findings and candidate](BATTERY-TEST.md).
 
 ### The shortcuts you'll actually use
 
@@ -117,7 +126,7 @@ meson compile -C smk/build-rf-debug \
 # Linked-image, routing, keymap/report, and LED-driver checks.
 python3 test_bluetooth.py
 python3 test_keymap.py
-python3 -m unittest test_leds.LedDriverChecks -v
+python3 -m unittest test_leds.LedDriverChecks test_battery -v
 ```
 
 For an existing build directory, just run the compile command again. Despite its historical `rf-test` name, this is the current all-mode target—not the older wired-only prototype.
@@ -151,9 +160,9 @@ Building new source does not update the preserved image above. Package each new 
 ### Still experimental
 
 - **Sleep is disabled.** Switch the keyboard off when not using it; low-power/battery behaviour is unfinished.
-- **Brightness is not an electrical rating.** Main lighting spans 0–256 PWM counts in steps of 16 and starts at 64. Esc always uses the 256-count maximum. Current and temperature limits have not been measured; stop if there is heat, flicker, or malfunction.
+- **Brightness is not an electrical rating.** Main lighting spans 0–256 PWM counts in steps of 16 and starts at 64. Status keys use 256 counts when lit—Esc on tested v5, up to five keys on the new candidate—even with main lighting at zero. Current and temperature limits have not been measured; stop if there is heat, unintended flicker, or malfunction.
 - **Wireless recovery needs more work.** Retries are bounded, and a lost release can leave a remote key held. Not every host, slot, rollover, or reconnection scenario has been tested.
-- **No persistent preferences or battery warning yet.** Screenshot and display-brightness behaviour also depend on the host OS.
+- **No persistent preferences.** The new source battery gauge uses uncalibrated bands and awaits hardware validation; the tested v5 image has no battery warning. Screenshot and display-brightness behaviour also depend on the host OS.
 
 ## Documentation
 
@@ -162,6 +171,7 @@ Building new source does not update the preserved image above. Package each new 
 | Keymaps, colours, controls, and the hardware checklist | [KEYMAP.md](KEYMAP.md) |
 | Detailed current handoff, provenance, build and recovery procedures | [Developer handoff](docs/HANDOFF.md) |
 | Preserved application images, source snapshots and checksums | [known-working/](known-working/) |
+| New five-key battery candidate, recovered sensing and limitations | [Battery notes](BATTERY-TEST.md) |
 | Matrix reconstruction | [Matrix table](matrix-table.md) · [Analysis](ANALYSIS.md) |
 | Earlier reverse-engineering stages | [USB](PROTOTYPE.md) · [LEDs](LED-TEST.md) · [Dongle](WIRELESS-TEST.md) · [Bluetooth](BLUETOOTH-TEST.md) |
 | What's tracked and what's kept local | [Version control](VERSION_CONTROL.md) |

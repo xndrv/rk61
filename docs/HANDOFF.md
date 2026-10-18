@@ -6,6 +6,24 @@
 **Start here when resuming this project.** Working directory: `/home/xander/rk61-recovery/`.
 Firmware checkout: `/home/xander/rk61-recovery/smk/`.
 
+## Current source: unflashed battery-gauge candidate
+
+**Latest source differs from owner-tested v5.** It adds a five-key battery bar on
+physical Esc/1/2/3/4, dim white depleted segments, and blinking Esc using the stock
+low-battery threshold. Battery sensing is decoded from the radio's split four-bit
+value, not a new MCU ADC or NuPhy's decoder. Unknown/stale status is distinct.
+Upper bands are provisional raw codes, **not calibrated percentages**. No charging
+signal or battery shutdown policy is claimed. The owner recalls the original
+firmware blinking Fn when low; that is not a hardware test of this candidate.
+
+See **[BATTERY-TEST.md](../BATTERY-TEST.md)** for precise reverse-engineering evidence,
+owner status vectors, timing/filtering, validation, limits and user-run flashing.
+`candidate-battery-v1.bin/.hex` are new local ignored artifacts. BIN SHA-256:
+`7f94cb071437dc8286412d02ab5c143ed4b51d3f8908f0bfca433fa1d9b474d6`.
+Highest linked address 0x53AC; ISP enabled. All three SDCC RK61 builds and interrupt
+checks pass; 46 regressions pass. No flash performed. Tested v5 and older images
+are unchanged; use their separate paths for recovery, never this untested image.
+
 ## Current baseline
 
 The owner has flashed and confirmed these features on the real keyboard:
@@ -21,7 +39,7 @@ This is an experimental but functional custom **SMK** port. Do not interpret the
 **Preserved all-mode baseline:** `known-working/baseline-all-modes.bin`, 61,440 bytes.
 SHA-256: `3acda448a10008ebb9f2867fed494cef5d1bfae44689d5c42176a69164f63430`.
 
-This is byte-identical to the owner-tested `rk61-bluetooth-test.bin`. The source/build at handoff matched that image; current development source now includes the unflashed layout candidate below. Matching Intel HEX is `known-working/baseline-all-modes.hex`. A source/notes/recovery bundle is `known-working/baseline-all-modes-handoff.tar.gz`; its integrity manifest is `known-working/SHA256SUMS`.
+This is byte-identical to the owner-tested `rk61-bluetooth-test.bin`. The source/build at the original handoff matched that image; current source includes the unflashed battery candidate above, retaining the v5 keymap. Matching Intel HEX is `known-working/baseline-all-modes.hex`. A source/notes/recovery bundle is `known-working/baseline-all-modes-handoff.tar.gz`; its integrity manifest is `known-working/SHA256SUMS`.
 
 **Do not overwrite these baseline or stock files with future experiments.** No new flash was performed during documentation/snapshotting.
 
@@ -299,12 +317,15 @@ Within `smk/`:
 - `layouts/rf-test/keymap.h`: named base/L1/L2/L3/Fn layers and 61-key ANSI-to-matrix helper.
 - `lighting.h`, `layouts/rf-test/lighting.c`: palette/bounds and all-mode layer-colour policy.
 - `layouts/led-test/indicators.c`: shared blanked/multiplexed PWM driver, nine-colour palette and brightness controls.
-- Board `kb.c`: no-layer/no-Esc override hooks for earlier wired/LED diagnostic layouts.
+- Board `kb.c`: no-layer/no-status override hooks for earlier wired/LED diagnostic layouts.
+- `layouts/rf-test/battery.c/.h`: stock battery-code bands, filtering and stale expiry;
+  atomic five-key display state. See the latest candidate note above.
 - `src/smk/matrix.c`: held-action caching, layer priority, combined modifier/basic actions, and shared-usage release handling.
 - `src/smk/report.c`, `report.h`: independent synthetic-modifier setter used by shifted symbols.
 - `layouts/rf-test/kb.c`: stock-derived switch routing/debounce, RAM BT slot, atomic Esc colour, pairing guards and old-route media/system release requests.
 - `layouts/rf-test/radio.c`: hardware bus, commands, bounded retries.
-- `layouts/rf-test/packet.c`: portable packet encoding/checksum validation.
+- `layouts/rf-test/packet.c`: portable packet encoding/checksum validation and
+  stock split-field battery-code decoder.
 - Board `meson.build`: keys-only, LED, and all-mode targets.
 - `src/keyboards/meson.build`: registers the new board directory.
 - `src/sino51lib/flash.c`, `src/smk/usb.c`: read-only pointer const-correctness fixes required by SDCC 4.6.0; remaining differences are formatting.
@@ -325,7 +346,7 @@ meson setup smk/build-rf-debug smk --buildtype=debug -Disp=enabled -Dsleep=disab
 meson compile -C smk/build-rf-debug royalkludge-rk61-rf-test_default_smk.hex
 python3 test_bluetooth.py
 python3 test_keymap.py
-python3 -m unittest test_leds.LedDriverChecks -v
+python3 -m unittest test_leds.LedDriverChecks test_battery -v
 ```
 
 If build definitions changed, use `meson setup --reconfigure smk/build-rf-debug smk` before compiling. The current all-mode target is still named **rf-test**, including Bluetooth.
@@ -399,7 +420,8 @@ Flasher source: https://github.com/karstx/sinowisp, built at commit `9caf1c9e4f3
    always-maximum Esc; prior success is not an electrical rating.
 3. Persistent transport/profile/lighting preferences; verify physical power/selector behavior.
 4. Reconnection supervision and reliable delivery/key-release behavior. Report retries currently stop after three attempts; a failed release can leave a remote key stuck.
-5. Battery/charging indication and low-voltage behavior.
+5. Hardware-test/calibrate the new battery gauge; recover charging indication
+   and low-voltage behavior. Raw bands are not yet charge percentages.
 6. Longer testing across all Bluetooth slots, hosts, modifiers, multi-key rollover, USB plug/unplug, pairing/reconnection and LED/key-scan interference.
 7. Optional richer layers/lighting effects later, only as needed.
 

@@ -13,6 +13,11 @@ uint8_t rk61_led_connection_colour(void)
     return RK61_COLOUR_NORMAL;
 }
 
+uint8_t rk61_led_battery_state(void)
+{
+    return RK61_BATTERY_UNKNOWN;
+}
+
 void kb_send_report(__xdata report_keyboard_t *report)
 {
     usb_send_report(report);

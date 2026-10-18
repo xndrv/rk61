@@ -1,4 +1,8 @@
-# RK61 layer maps — layout v5
+# RK61 layer maps — v5 keymap, battery candidate source
+
+**The current source keeps this v5 keymap and adds an unflashed five-key battery
+candidate.** See [battery notes](BATTERY-TEST.md) for its display, limits and image.
+The v5 image below remains the last owner-tested version.
 
 **Owner-tested v5: reported "alright it works!" after flashing.** This general
 smoke-test result is not an electrical rating or exhaustive validation. These maps adapt
@@ -134,9 +138,13 @@ PWM pulse ceiling experimentally, without changing GPIO drive settings.
 - Media/system releases are requested on the old route before changing transport
   or starting pairing. This is not a general reconnection/delivery guarantee;
   bounded radio retries and lost wireless releases remain a known limitation.
-- Esc now indicates the selected route; no battery warning is added.
+- Tested v5 uses Esc for the selected route. Current source adds the five-key
+  battery display described below; bindings and route selection are unchanged.
 
-## Layer colours, brightness and Esc display
+## V5 layer colours, brightness and Esc display
+
+This section records tested **v5** lighting. The current source extends the status
+area to five keys; see the next section for that unflashed candidate.
 
 | State | Main keyboard colour, excluding Esc |
 |---|---|
@@ -204,7 +212,22 @@ Implementation: shared `lighting.h` defines palette and bounds;
 `layouts/rf-test/lighting.c` supplies layer colours; `layouts/rf-test/kb.c` publishes
 an atomic selected-mode colour. The shared `layouts/led-test/indicators.c` handles
 PWM, Esc targeting and brightness controls. Earlier diagnostic layouts have no
-Esc/layer override and can still go completely dark. Battery indication is not added.
+Esc/layer override and can still go completely dark.
+
+## Current source: Esc + 1..4 battery display
+
+The same mode colours now fill a five-key bar, left to right. Depleted segments
+are dim neutral white. Low battery blinks Esc; unknown/stale readings keep Esc's
+mode colour steady while 1..4 pulse dim white together. All five status positions
+ignore main brightness/toggle/layers; other keys keep the lighting above.
+
+The decoder and low warning come from stock firmware. Upper charge bands are
+**provisional raw-code intervals, not calibrated percentages**; five lit keys do
+not prove 81–100% charge. The stock below-3 warning replaces the originally
+proposed, unverified 10% threshold. USB mode does not imply full or charging.
+See [BATTERY-TEST.md](BATTERY-TEST.md) for the exact table, tests and hardware checklist.
+The source build is packaged separately as `candidate-battery-v1.bin/.hex`;
+tested v5 and earlier recovery artifacts are untouched.
 
 ## Physical power and BT/dongle switches — hardware trial
 
@@ -270,7 +293,7 @@ export PATH="$PWD/venv/bin:$PWD/toolchain/usr/bin:$PWD/toolchain/bin:$PATH"
 meson compile -C smk/build-rf-debug royalkludge-rk61-rf-test_default_smk.hex
 python3 test_bluetooth.py
 python3 test_keymap.py
-python3 -m unittest test_leds.LedDriverChecks -v
+python3 -m unittest test_leds.LedDriverChecks test_battery -v
 ```
 
 Layout v5 passed the SDCC build and interrupt checker, 20 Bluetooth-suite checks,
@@ -298,7 +321,10 @@ Highest linked address: `0x5117`, below the `0xEC00` settings boundary. ISP stay
 enabled. Baseline, v3/v4 candidate binaries and both preserved v3/v4 image/HEX/source
 manifests were verified unchanged. Never overwrite them with a new experiment.
 
-To test, keep another usable keyboard and a USB cable available. Run this
+The new **battery candidate's** image, command and checklist are in
+[BATTERY-TEST.md](BATTERY-TEST.md). The command below is for **v5 only**.
+
+To re-flash v5, keep another usable keyboard and a USB cable available. Run this
 **yourself in your terminal**, not through the agent:
 
 ```sh

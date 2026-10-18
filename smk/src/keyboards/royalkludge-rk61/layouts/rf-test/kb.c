@@ -18,7 +18,7 @@ static uint16_t mode_debounce;
 static uint8_t  physical_state;
 static uint8_t  candidate_state;
 static uint8_t  last_bt_slot;
-// Published atomically for Esc's LED ISR; selected route, not link confirmation.
+// Published atomically for the five-key LED gauge; selected route, not link confirmation.
 static volatile uint8_t          connection_colour;
 static __xdata report_keyboard_t blank_keyboard;
 static __xdata report_nkro_t     blank_nkro;
@@ -139,6 +139,7 @@ void kb_update(void)
     if (radio_mode) {
         rk61_radio_task();
     }
+    rk61_radio_battery_task(); // battery sensing continues in wired mode too
 }
 
 void kb_send_report(__xdata report_keyboard_t *report)

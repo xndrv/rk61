@@ -63,3 +63,14 @@ bool rk61_packet_status_valid(const uint8_t response[4])
 {
     return response[0] == 0xBB && (uint8_t)(response[1] + response[2] + response[3]) == 0x55;
 }
+
+uint8_t rk61_packet_battery_code(const uint8_t response[4])
+{
+    if (!rk61_packet_status_valid(response)) {
+        return 255u;
+    }
+    // Stock RX stores wire byte 2 at 0x08B0, wire byte 3 at 0x08AF.
+    // 0x96BF..0x96D2 doubles byte 2's low three bits and adds byte 3 bit 7.
+    // Byte 3 bit 7 is NOT a standalone low-battery flag (unlike other boards).
+    return (uint8_t)(((response[2] & 7u) << 1) | (response[3] >> 7));
+}

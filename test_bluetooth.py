@@ -112,6 +112,8 @@ void rk61_radio_select_link(uint8_t link, bool pairing) {
 void rk61_radio_release(void) { ++releases; }
 void rk61_radio_status(void) {}
 void rk61_radio_task(void) {}
+static unsigned battery_tasks;
+void rk61_radio_battery_task(void) { ++battery_tasks; }
 void rk61_radio_keyboard(report_keyboard_t *r) { (void)r; ++radio_reports; }
 void rk61_radio_nkro(report_nkro_t *r) { (void)r; ++radio_reports; }
 void rk61_radio_extra(report_extra_t *r) { (void)r; ++radio_reports; }
@@ -136,6 +138,7 @@ int main(void) {
     P5_6 = 1;
     kb_init();
     assert(!radio_mode && selections == 0);
+    kb_update(); assert(battery_tasks == 1); // poll even in wired mode
     assert(rk61_led_connection_colour() == RK61_COLOUR_MAGENTA);
     assert(!kb_process_record(RK61_BT_PAIR, true)); // no pairing in USB mode
     assert(selections == 0);
@@ -228,9 +231,21 @@ SEQUENCE_HARNESS = r'''
 #include <assert.h>
 #include "mock.h"
 REGISTERS
-static uint8_t bytes[256], accumulator, bits;
-static unsigned count;
+static uint8_t bytes[256], accumulator, bits, clock_now;
+static unsigned count, rx_bit;
+static uint8_t incoming[4] = {255,255,255,255};
+uint8_t rk61_led_status_clock(void) { return clock_now; }
+static void set_response(uint8_t a, uint8_t b) {
+    incoming[0] = 0xbb; incoming[1] = (uint8_t)(0x55 - a - b);
+    incoming[2] = a; incoming[3] = b;
+}
 void delay_us(uint16_t us) {
+    if (us == 223) rx_bit = 0;
+    if (us == 2 && !P4_7 && !(P0CR & 0x10)) {
+        assert(rx_bit < 32);
+        P0_3 = !!(incoming[rx_bit / 8] & (0x80 >> (rx_bit % 8)));
+        ++rx_bit;
+    }
     // Observe the real TX bit loop after each rising clock edge.
     if (us == 2 && P4_7 && (P0CR & 0x10)) {
         accumulator = (uint8_t)((accumulator << 1) | !!P0_4);
@@ -240,6 +255,7 @@ void delay_us(uint16_t us) {
 void delay_ms(uint16_t ms) { (void)ms; }
 void watchdog_kick(void) {}
 #include "RADIO_PATH"
+#include "lighting.h"
 static void check_frame(unsigned offset, uint8_t command_id, uint8_t a, uint8_t b) {
     assert(bytes[offset] == 0xaa && bytes[offset + 1] == 3);
     assert(bytes[offset + 2] == command_id && bytes[offset + 3] == a && bytes[offset + 4] == b);
@@ -273,6 +289,34 @@ int main(void) {
     assert(count == 12);
     check_frame(0, 6, 1, 0);
     check_frame(6, 0x0a, 0, 0);
+
+    // Use the real RX bit loop, checksum decoder, filter and read-only poller.
+    rk61_radio_init();
+    assert(rk61_led_battery_state() == RK61_BATTERY_UNKNOWN);
+    set_response(0x25, 0x38); // owner's Bluetooth reply -> battery code 10
+    count = bits = 0;
+    clock_now = 3; rk61_radio_battery_task(); assert(count == 0);
+    clock_now = 4; rk61_radio_battery_task(); assert(count == 6);
+    check_frame(0, 0x0a, 0, 0); // status only: no wake, mode or pairing command
+    assert(rk61_led_battery_state() == 5); // valid despite missing ACK edge
+    rk61_radio_battery_task(); assert(count == 6); // no main-loop flood
+    // Reports get priority; polling neither drops nor overwrites pending data.
+    queue_keyboard(2, 0, 0);
+    uint8_t saved[32]; for (unsigned i = 0; i < 32; ++i) saved[i] = pending[i];
+    clock_now = 8; rk61_radio_battery_task(); assert(count == 6 && pending_tries == 3);
+    for (unsigned i = 0; i < 32; ++i) assert(saved[i] == pending[i]);
+    pending_tries = 0;
+    set_response(0x01, 0x18); // raw 2: same low warning threshold as stock
+    count = bits = 0; rk61_radio_battery_task(); assert(count == 6);
+    assert(rk61_led_battery_state() == (RK61_BATTERY_LOW | 1));
+    incoming[1] ^= 1; // invalid checksums never become an empty battery reading
+    for (unsigned i = 1; i <= 10; ++i) {
+        count = bits = 0; clock_now = (uint8_t)(8 + i * 4);
+        rk61_radio_battery_task(); assert(count == 6);
+    }
+    assert(rk61_led_battery_state() == RK61_BATTERY_UNKNOWN);
+    set_response(0x25, 0); count = bits = 0; clock_now += 4;
+    rk61_radio_battery_task(); assert(rk61_led_battery_state() == 5);
 }
 '''
 
@@ -296,7 +340,7 @@ class BluetoothHostChecks(unittest.TestCase):
         self.run_harness(ROUTING_HARNESS, [])
 
     def test_real_radio_command_sequences(self):
-        self.run_harness(SEQUENCE_HARNESS, [str(SOURCE / "packet.c")])
+        self.run_harness(SEQUENCE_HARNESS, [str(SOURCE / "packet.c"), str(SOURCE / "battery.c")])
 
 
 if __name__ == "__main__":

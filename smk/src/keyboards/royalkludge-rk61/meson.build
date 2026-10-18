@@ -27,6 +27,7 @@ keyboards += {
         'src' : files(
             'user_init.c', 'user_matrix.c', 'user_sleep.c',
             'layouts/rf-test/kb.c', 'layouts/rf-test/radio.c', 'layouts/rf-test/packet.c',
+            'layouts/rf-test/battery.c',
         ),
         'layouts' : {
             'default' : {

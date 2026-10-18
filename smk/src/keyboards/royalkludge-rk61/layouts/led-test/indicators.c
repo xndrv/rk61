@@ -6,7 +6,7 @@
 #include "lighting.h"
 
 // Stock period/off points/drive/blanking are unchanged. Main lighting boots at
-// 64 counts; the 256-count ceiling and fixed-maximum Esc need hardware validation.
+// 64 counts; the 256-count ceiling and five status keys need hardware validation.
 _Static_assert(RK61_LED_BRIGHTNESS_STEP == 16u, "brightness levels use a four-bit shift");
 _Static_assert(RK61_LED_MAX_PULSE % RK61_LED_BRIGHTNESS_STEP == 0u, "whole brightness levels required");
 _Static_assert(RK61_LED_MAX_PULSE / RK61_LED_BRIGHTNESS_STEP <= 255u, "level must fit an atomic byte");
@@ -60,6 +60,13 @@ static volatile uint8_t led_colour;
 static volatile uint8_t led_brightness_level;
 static uint8_t          restore_brightness_level;
 static uint8_t          led_col;
+static uint8_t          status_frames;
+static volatile uint8_t status_clock;
+
+uint8_t rk61_led_status_clock(void)
+{
+    return status_clock;
+}
 
 void indicators_pwm_disable(void)
 {
@@ -80,6 +87,8 @@ void indicators_init(void)
     led_brightness_level     = RK61_LED_DEFAULT_PULSE / RK61_LED_BRIGHTNESS_STEP;
     restore_brightness_level = led_brightness_level;
     led_col                  = 0;
+    status_frames            = 0;
+    status_clock             = 0;
     indicators_pwm_disable();
 
     // These PWM-source pins are outputs with low idle latches in stock 0xA829.
@@ -130,11 +139,26 @@ bool indicators_update_step(keyboard_state_t *keyboard, uint8_t current_step)
     if (led_started) {
         const uint8_t  override          = rk61_led_override_colour();
         const uint8_t  colour            = override < RK61_COLOUR_COUNT ? override : led_colour;
-        const uint8_t  status_colour     = rk61_led_connection_colour();
-        const bool     status_here       = led_col == 0 && status_colour < RK61_COLOUR_COUNT;
+        uint8_t        status_colour     = rk61_led_connection_colour();
+        const bool     status_here       = led_col < 5 && status_colour < RK61_COLOUR_COUNT;
+        const uint8_t  battery           = rk61_led_battery_state();
         const uint16_t brightness        = (uint16_t)led_brightness_level << 4;
-        const uint16_t status_brightness = RK61_LED_STATUS_PULSE;
-        // Index 0 is background; index 1 is row 0, overridden only in column 0.
+        uint16_t       status_brightness = RK61_LED_STATUS_PULSE;
+        if (status_here) {
+            if (battery == RK61_BATTERY_UNKNOWN) {
+                // Keep Esc's route visible; pulse the other four neutral keys.
+                if (led_col) {
+                    status_colour     = RK61_COLOUR_WHITE;
+                    status_brightness = (status_clock & 1u) ? 0 : RK61_LED_EMPTY_PULSE;
+                }
+            } else if (led_col >= (battery & RK61_BATTERY_COUNT)) {
+                status_colour     = RK61_COLOUR_WHITE;
+                status_brightness = RK61_LED_EMPTY_PULSE;
+            } else if ((battery & RK61_BATTERY_LOW) && !led_col && (status_clock & 1u)) {
+                status_brightness = 0; // deliberate low-battery blink, not blocking
+            }
+        }
+        // Index 0 is background; index 1 is row 0 (Esc and physical 1..4).
         // A constant array index avoids SDCC's constant-branch warnings in PAINT.
         uint16_t pulses[2][3];
         for (uint8_t group = 0; group < 3; group++) {
@@ -157,6 +181,10 @@ bool indicators_update_step(keyboard_state_t *keyboard, uint8_t current_step)
     }
     if (++led_col == MATRIX_COLS) {
         led_col = 0;
+        if (led_started && ++status_frames == RK61_STATUS_FRAMES) {
+            status_frames = 0;
+            ++status_clock;
+        }
         return true;
     }
     return false;

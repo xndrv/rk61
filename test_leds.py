@@ -65,6 +65,8 @@ volatile uint8_t mock_regs[512];
 static int selected = -1;
 static uint8_t held_layer, expected_col;
 static uint8_t connection = 255;
+static uint8_t battery_display = 5;
+uint8_t rk61_led_battery_state(void) { return battery_display; }
 uint8_t get_action_layer(void) { return held_layer; }
 uint8_t rk61_led_connection_colour(void) { return connection; }
 void user_matrix_cols_deselect_all(void) { selected = -1; }
@@ -112,15 +114,26 @@ static void check_parked(void) {
 static void check_frame(unsigned g, unsigned r, unsigned b,
                          unsigned sg, unsigned sr, unsigned sb, bool indicator) {
     for (unsigned slot = 0; slot < 14; ++slot) {
+        const unsigned phase = rk61_led_status_clock() & 1;
         assert(indicators_update_step(0, 0) == (expected_col == 13));
-        bool status_here = indicator && expected_col == 0;
+        bool status_here = indicator && expected_col < 5;
+        unsigned eg = sg, er = sr, eb = sb;
+        if (status_here) {
+            if (!battery_display && expected_col) {
+                eg = er = eb = phase ? 0 : 8;
+            } else if (battery_display && expected_col >= (battery_display & 7)) {
+                eg = er = eb = 8;
+            } else if ((battery_display & 0x80) && !expected_col && phase) {
+                eg = er = eb = 0;
+            }
+        }
         if (g || r || b || status_here) {
             assert(selected == expected_col);
             assert(PWM00CON == 0x8a && PWM10CON == 0x8a && PWM20CON == 0x8a);
         } else {
             check_parked();
         }
-        check_duties(g, r, b, sg, sr, sb, status_here);
+        check_duties(g, r, b, eg, er, eb, status_here);
         expected_col = (expected_col + 1) % 14;
     }
 }
@@ -211,7 +224,7 @@ int main(void) {
     press(RK61_LED_BRIGHTNESS_UP); frame(0, 16, 0); // knob alone turns it back on
     held_layer = 250; frame(0, 16, 0); // unknown layer falls back to normal colour
 
-    // Esc is column 0, ANSI row 0 (PWM23/24/25) ONLY. Every other row/column
+    // Five indicators occupy row 0 / columns 0..4 ONLY. Every other row/column
     // must keep normal layer lighting, or remain dark at brightness zero.
     static const uint8_t modes[] = { RK61_COLOUR_TEAL, RK61_COLOUR_ORANGE, RK61_COLOUR_MAGENTA };
     static const uint8_t status_weights[][3] = { {4,0,2}, {1,4,0}, {0,4,4} };
@@ -244,10 +257,43 @@ int main(void) {
         check_frame(256,256,256,64 * status_weights[mode][0],
                     64 * status_weights[mode][1],64 * status_weights[mode][2],true);
     }
+    // Every gauge state, mode, background level and held layer. Run long enough
+    // to cover both blink phases; compare physical PWM banks independently.
+    static const uint8_t states[] = {0, 1, 2, 3, 4, 5, 0x81};
+    for (unsigned mode = 0; mode < 3; ++mode) {
+        connection = modes[mode];
+        for (unsigned state = 0; state < sizeof(states); ++state) {
+            battery_display = states[state];
+            boot();
+            assert(rk61_led_status_clock() == 0);
+            for (unsigned step = 0; step <= 16; ++step) {
+                zero();
+                for (unsigned i = 0; i < step; ++i) press(RK61_LED_BRIGHTNESS_UP);
+                unsigned b = step * 16;
+                for (unsigned repeat = 0; repeat < 8; ++repeat) {
+                    held_layer = RK61_BASE;
+                    check_frame(b,b,b,64 * status_weights[mode][0],64 * status_weights[mode][1],64 * status_weights[mode][2],true);
+                    held_layer = RK61_LAYER_1;
+                    check_frame(b,0,0,64 * status_weights[mode][0],64 * status_weights[mode][1],64 * status_weights[mode][2],true);
+                    held_layer = RK61_LAYER_2;
+                    check_frame(0,0,b,64 * status_weights[mode][0],64 * status_weights[mode][1],64 * status_weights[mode][2],true);
+                    held_layer = RK61_LAYER_3;
+                    check_frame(0,b,b,64 * status_weights[mode][0],64 * status_weights[mode][1],64 * status_weights[mode][2],true);
+                    held_layer = RK61_FN;
+                    check_frame(b,b,0,64 * status_weights[mode][0],64 * status_weights[mode][1],64 * status_weights[mode][2],true);
+                }
+            }
+            assert(rk61_led_status_clock() == (17 * 8 * 5) / 32);
+        }
+    }
+    // Clock is driven by scans, not main-loop speed or keyboard activity.
+    connection = RK61_COLOUR_NORMAL; held_layer = RK61_BASE; boot(); zero();
+    for (unsigned i = 0; i < 32 * 257; ++i) frame(0,0,0);
+    assert(rk61_led_status_clock() == 1); // atomic byte wrap
     connection = RK61_COLOUR_NORMAL; zero(); frame(0,0,0); // diagnostic: all off
     boot(); frame(64,64,64);
     assert(layout_process_record(4, true));
-    puts("PASS: zero..256, 240/256 boundary, fixed-max Esc at all levels, palette/layers, clamp/restore/blanking");
+    puts("PASS: zero..256, five battery keys/all states/modes/layers, blink/unknown, clock/wrap, palette/clamp/blanking");
 }
 '''.replace("DRIVER_PATH", str(BOARD / "layouts/led-test/indicators.c")).replace(
             "POLICY_PATH", str(BOARD / "layouts/rf-test/lighting.c"))

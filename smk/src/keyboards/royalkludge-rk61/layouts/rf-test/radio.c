@@ -4,6 +4,8 @@
 #include "delay.h"
 #include "watchdog.h"
 #include "debug.h"
+#include "battery.h"
+#include "lighting.h"
 
 // Derived from stock 0x8BF6/0xAD80 (TX), 0x962D/0xAA99 (RX).
 // P0.2 wake; P7.5 select; P4.7 clock; P0.4 MOSI; P0.3 MISO; P4.1 ACK.
@@ -11,6 +13,7 @@ static uint8_t tx[32];
 static uint8_t pending[32];
 static uint8_t pending_tries;
 static uint8_t response[4];
+static uint8_t last_status_poll;
 
 static void wait_ms(uint16_t ms)
 {
@@ -95,7 +98,7 @@ static bool command(uint8_t cmd, uint8_t a, uint8_t b)
     return transmit(tx, 6);
 }
 
-void rk61_radio_status(void)
+static bool query_status(void)
 {
     const bool ack = command(0x0A, 0, 0);
     delay_us(223);
@@ -109,9 +112,17 @@ void rk61_radio_status(void)
         }
         bus_release();
     }
-    dprintf("RF ack=%u rx=%02x %02x %02x %02x valid=%u P55=%u P56=%u\r\n", (unsigned)ack, (unsigned)response[0], (unsigned)response[1], (unsigned)response[2], (unsigned)response[3], (unsigned)rk61_packet_status_valid(response), (unsigned)P5_5, (unsigned)P5_6);
-    // In release builds dprintf is a no-op.
-    ack;
+    last_status_poll = rk61_led_status_clock();
+    // The owner gets valid replies with ack=0. Trust header/checksum, not ACK.
+    rk61_battery_observe(response, last_status_poll);
+    return ack;
+}
+
+void rk61_radio_status(void)
+{
+    const bool ack = query_status();
+    dprintf("RF ack=%u rx=%02x %02x %02x %02x valid=%u P55=%u P56=%u battery_code=%u\r\n", (unsigned)ack, (unsigned)response[0], (unsigned)response[1], (unsigned)response[2], (unsigned)response[3], (unsigned)rk61_packet_status_valid(response), (unsigned)P5_5, (unsigned)P5_6, (unsigned)rk61_packet_battery_code(response));
+    ack; // dprintf is a no-op in release builds
 }
 
 void rk61_radio_init(void)
@@ -122,6 +133,8 @@ void rk61_radio_init(void)
     P5PCR |= 0x60;
     bus_release();
     pending_tries = 0;
+    last_status_poll = rk61_led_status_clock();
+    rk61_battery_init(last_status_poll);
     wait_ms(1500); // allow the separate radio controller to finish its boot
 }
 
@@ -170,6 +183,17 @@ void rk61_radio_task(void)
         if (transmit(pending, 32)) {
             pending_tries = 0;
         }
+    }
+}
+
+void rk61_radio_battery_task(void)
+{
+    const uint8_t now = rk61_led_status_clock();
+    rk61_battery_expire(now);
+    if (!pending_tries && (uint8_t)(now - last_status_poll) >= RK61_BATTERY_POLL_EPOCHS) {
+        // Bounded existing bus transaction, in the main loop only. No wake,
+        // route reassertion, pairing or debug spam in the periodic path.
+        query_status();
     }
 }
 
