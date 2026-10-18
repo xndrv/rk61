@@ -1,6 +1,8 @@
 # RK61 five-key battery gauge — candidate v1
 
-**Current source, built/tested offline; not yet flashed or hardware-confirmed.**
+**Battery-v1 build; owner testing on battery is in progress, without recorded
+discharge/threshold results.** Newer source adds fixed layer-key colours in a
+separate unflashed candidate; see the [current handoff](docs/HANDOFF.md).
 The owner-tested v5 image and all older recovery artifacts remain unchanged.
 The keymap, routing, pairing policy, GPIO drive and PWM period are unchanged.
 
@@ -88,7 +90,9 @@ bond erase, new pairing command, ADC register or assumed voltage divider is used
   bus transaction without a wake, route reassertion or pairing command.
   Only explicit Fn+Y/mode diagnostics print; periodic polling is silent.
 - `layouts/led-test/indicators.c`: row 0 / columns 0..4 use PWM23/24/25.
-  Other rows in those columns keep their layer colour. Earlier diagnostic
+  In v1 other rows in those columns keep their layer colour. Newer source adds
+  the fixed bottom-row layer-key colours (including L1 beneath battery key 2).
+  Earlier diagnostic
   layouts disable all status overrides and can still go completely dark.
 
 One atomic scan epoch advances every **32 completed 14-column LED sweeps**,

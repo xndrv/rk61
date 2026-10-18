@@ -80,14 +80,29 @@ static unsigned duty(uint8_t hi, uint8_t lo) { return ((unsigned)hi << 8) | lo; 
 static void check_duties(unsigned g, unsigned r, unsigned b,
                          unsigned sg, unsigned sr, unsigned sb, bool status_here) {
     const unsigned normal[] = {g, r, b}, status[] = {sg, sr, sb};
+    unsigned brightness = g > r ? g : r;
+    if (b > brightness) brightness = b;
+    unsigned bottom[] = {g, r, b};
+    // Independent physical position/channel expectations, not the policy hook.
+    switch (expected_col) {
+        case 2:  bottom[0] = brightness; bottom[1] = 0; bottom[2] = 0; break;
+        case 8:  bottom[0] = 0; bottom[1] = 0; bottom[2] = brightness; break;
+        case 10: bottom[0] = 0; bottom[1] = brightness; bottom[2] = brightness; break;
+        case 13: bottom[0] = brightness; bottom[1] = brightness; bottom[2] = 0; break;
+    }
 #define CHECK(channel, off, group, populated, row) \
     assert(duty(channel##DUTY1H, channel##DUTY1L) == (off)); \
     assert(duty(channel##DUTY2H, channel##DUTY2L) == (off) + \
-        ((populated) ? (((row) == 0 && status_here) ? status[group] : normal[group]) : 0)); \
+        ((populated) ? (((row) == 0 && status_here) ? status[group] : (row) == 4 ? bottom[group] : normal[group]) : 0)); \
     assert(duty(channel##DUTY2H, channel##DUTY2L) - (off) <= 256); \
     assert(duty(channel##DUTY2H, channel##DUTY2L) < 0x0537);
     LED_CHANNELS(CHECK)
 #undef CHECK
+    // Check the physical bottom-row bank independently of row annotations,
+    // including columns 8/10/13 where no battery override is present.
+    assert(duty(PWM00DUTY2H, PWM00DUTY2L) == 0x35 + bottom[0]);
+    assert(duty(PWM01DUTY2H, PWM01DUTY2L) == 0x36 + bottom[1]);
+    assert(duty(PWM02DUTY2H, PWM02DUTY2L) == 0x37 + bottom[2]);
     // Check the Esc bank independently of the driver's row annotations, so a
     // mistaken annotation cannot make both production and the test agree.
     if (status_here) {
@@ -98,7 +113,6 @@ static void check_duties(unsigned g, unsigned r, unsigned b,
         assert(duty(cg##DUTY2H, cg##DUTY2L) == (og) + g); \
         assert(duty(cr##DUTY2H, cr##DUTY2L) == (or_) + r); \
         assert(duty(cb##DUTY2H, cb##DUTY2L) == (ob) + b);
-        NORMAL_ROW(PWM00, PWM01, PWM02, 0x35, 0x36, 0x37)
         NORMAL_ROW(PWM03, PWM04, PWM05, 0x32, 0x33, 0x34)
         NORMAL_ROW(PWM10, PWM11, PWM12, 0x2c, 0x2d, 0x2e)
         NORMAL_ROW(PWM13, PWM14, PWM15, 0x2f, 0x30, 0x31)
@@ -152,6 +166,14 @@ static void zero(void) {
     for (unsigned i = 0; i < 20; ++i) press(RK61_LED_BRIGHTNESS_DOWN);
 }
 int main(void) {
+    // Only the four physical layer keys get a permanent colour recipe.
+    for (unsigned col = 0; col < 14; ++col) {
+        unsigned colour = col == 2 ? RK61_COLOUR_GREEN : col == 8 ? RK61_COLOUR_BLUE
+                        : col == 10 ? RK61_COLOUR_MAGENTA : col == 13 ? RK61_COLOUR_YELLOW
+                        : RK61_COLOUR_NORMAL;
+        assert(rk61_led_layer_key_colour(col) == colour);
+    }
+    assert(rk61_led_layer_key_colour(255) == RK61_COLOUR_NORMAL);
     held_layer = RK61_LAYER_1;
     connection = RK61_COLOUR_TEAL;
     indicators_init();
@@ -224,8 +246,8 @@ int main(void) {
     press(RK61_LED_BRIGHTNESS_UP); frame(0, 16, 0); // knob alone turns it back on
     held_layer = 250; frame(0, 16, 0); // unknown layer falls back to normal colour
 
-    // Five indicators occupy row 0 / columns 0..4 ONLY. Every other row/column
-    // must keep normal layer lighting, or remain dark at brightness zero.
+    // Battery indicators occupy row 0 / columns 0..4 ONLY. Bottom-row layer
+    // keys keep their own colours; all other pixels keep the layer lighting.
     static const uint8_t modes[] = { RK61_COLOUR_TEAL, RK61_COLOUR_ORANGE, RK61_COLOUR_MAGENTA };
     static const uint8_t status_weights[][3] = { {4,0,2}, {1,4,0}, {0,4,4} };
     for (unsigned mode = 0; mode < 3; ++mode) {
@@ -293,7 +315,7 @@ int main(void) {
     connection = RK61_COLOUR_NORMAL; zero(); frame(0,0,0); // diagnostic: all off
     boot(); frame(64,64,64);
     assert(layout_process_record(4, true));
-    puts("PASS: zero..256, five battery keys/all states/modes/layers, blink/unknown, clock/wrap, palette/clamp/blanking");
+    puts("PASS: fixed layer-key colours at zero..256/all palettes/layers, battery states/modes, blink/unknown, clock/wrap, clamp/blanking");
 }
 '''.replace("DRIVER_PATH", str(BOARD / "layouts/led-test/indicators.c")).replace(
             "POLICY_PATH", str(BOARD / "layouts/rf-test/lighting.c"))

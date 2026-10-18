@@ -1,8 +1,10 @@
-# RK61 layer maps — v5 keymap, battery candidate source
+# RK61 layer maps — v5 keymap, battery and layer-key colour source
 
-**The current source keeps this v5 keymap and adds an unflashed five-key battery
-candidate.** See [battery notes](BATTERY-TEST.md) for its display, limits and image.
-The v5 image below remains the last owner-tested version.
+**The current source keeps the v5 keymap and adds a battery gauge plus fixed
+layer-key colours.** Battery candidate v1 is undergoing owner testing, without
+recorded discharge results. The new layer-key colour candidate is unflashed.
+See [battery notes](BATTERY-TEST.md) and the [current handoff](docs/HANDOFF.md).
+V5 remains the last preserved owner-tested checkpoint.
 
 **Owner-tested v5: reported "alright it works!" after flashing.** This general
 smoke-test result is not an electrical rating or exhaustive validation. These maps adapt
@@ -32,6 +34,11 @@ The bottom row, by physical position, is now:
 | Menu / down-arrow legend | Windows (Left GUI) |
 | Right Ctrl / right-arrow legend | Hold Layer 3: media/utilities |
 | Fn | Hold the separate service layer |
+
+In the new source, **L1 is always green, L2 blue, L3 magenta and Fn yellow**,
+regardless of the active layer or selected base colour. These four physical keys
+follow main brightness (including zero) and L3+Tab off/restore; unlike the battery
+bar, they are not fixed-max status lights. The new pixel overrides are unflashed.
 
 Hold to activate, release to leave. Priority is **Fn > L3 > L2 > L1**.
 Holding L1+L2 selects L2, **not** L3; L3 has its own dedicated key.
@@ -226,8 +233,43 @@ The decoder and low warning come from stock firmware. Upper charge bands are
 not prove 81–100% charge. The stock below-3 warning replaces the originally
 proposed, unverified 10% threshold. USB mode does not imply full or charging.
 See [BATTERY-TEST.md](BATTERY-TEST.md) for the exact table, tests and hardware checklist.
-The source build is packaged separately as `candidate-battery-v1.bin/.hex`;
-tested v5 and earlier recovery artifacts are untouched.
+The original gauge build remains `candidate-battery-v1.bin/.hex`. The current
+build adds the fixed-colour layer keys below; tested v5 and earlier recovery
+artifacts are untouched.
+
+## Current source: fixed layer-key colours — unflashed
+
+Only four bottom-row pixels override the background layer/base colour:
+
+| Physical layer key | Matrix row / column | Colour |
+|---|---|---|
+| L1 (former Left Alt) | 4 / 2 | Green |
+| L2 (former Right Alt) | 4 / 8 | Blue |
+| L3 (former Right Ctrl) | 4 / 10 | Magenta |
+| Original Fn | 4 / 13 | Yellow |
+
+They follow main brightness 0..256 and the main toggle; the battery bar is
+unchanged. Other rows in these columns retain their existing lighting, including
+battery key 2 above L1. Earlier wired/LED diagnostic layouts retain their old
+no-override behaviour. No key bindings, radio/battery policy or PWM settings change.
+
+SDCC builds and interrupt checks pass for all RK61 targets; 46 regressions pass,
+including real PWM checks across every brightness, palette, held layer and battery
+state. Hardware pixel mapping/appearance and electrical limits remain unverified.
+The separate application is `candidate-layer-key-colours-v1.bin`, with matching
+`.hex`; hashes are in the [handoff](docs/HANDOFF.md). If testing, run yourself:
+
+```sh
+sudo ~/rk61-recovery/toolchain/bin/sinowisp write \
+  --platform sh68f90 --vendor_id 0x258a --product_id 0x00e1 \
+  --format bin --reboot true \
+  ~/rk61-recovery/candidate-layer-key-colours-v1.bin
+```
+
+Keep a spare keyboard/cable available. Check the four keys in base and each held
+layer, cycle the base palette, dim to zero, then restore with L3+Tab or Fn+].
+Check that battery LEDs still work independently and other pixels/typing are
+unchanged. Stop for heat or unintended flicker. No agent-side flash was performed.
 
 ## Physical power and BT/dongle switches — hardware trial
 
@@ -321,8 +363,9 @@ Highest linked address: `0x5117`, below the `0xEC00` settings boundary. ISP stay
 enabled. Baseline, v3/v4 candidate binaries and both preserved v3/v4 image/HEX/source
 manifests were verified unchanged. Never overwrite them with a new experiment.
 
-The new **battery candidate's** image, command and checklist are in
-[BATTERY-TEST.md](BATTERY-TEST.md). The command below is for **v5 only**.
+The current **layer-key colour candidate's** command/checklist are above;
+[BATTERY-TEST.md](BATTERY-TEST.md) records the older battery-only image.
+The command below is for **v5 only**.
 
 To re-flash v5, keep another usable keyboard and a USB cable available. Run this
 **yourself in your terminal**, not through the agent:

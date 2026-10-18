@@ -35,6 +35,9 @@ enum rk61_led_colour {
 
 // Called by the LED ISR: return NORMAL to use the user's selected base colour.
 uint8_t rk61_led_override_colour(void);
+// Fixed colour of a physical bottom-row layer key; NORMAL leaves it unchanged.
+// These keys follow ordinary brightness/toggle, unlike the battery indicators.
+uint8_t rk61_led_layer_key_colour(uint8_t column);
 // NORMAL disables all five status keys (earlier diagnostic layouts).
 uint8_t rk61_led_connection_colour(void);
 uint8_t rk61_led_battery_state(void);

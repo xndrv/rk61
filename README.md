@@ -69,6 +69,11 @@ Keep the familiar base layout. Hold a layer key when you need more.
 Ctrl │ Alt │ L1 │             Space             │ L2 │ Win │ L3 │ Fn
 ```
 
+**New source candidate:** the physical **L1 / L2 / L3 / Fn keys** keep their own
+**green / blue / magenta / yellow** colours, regardless of which layer is held.
+They follow main brightness and turn off with the main lighting; the battery
+bar remains independent. This layer-key change is not yet hardware-tested.
+
 Unassigned keys on the user layers **do nothing**—they don't silently fall through to the base map. Layer priority is **Fn → L3 → L2 → L1**; releasing a layer restores the next held one.
 
 → **[See every key and edit the layout](KEYMAP.md)**
@@ -88,9 +93,12 @@ This shows the **selected route**, not proof that a wireless host is connected. 
 The current source extends the display to **Esc, 1, 2, 3, 4**: route-coloured
 battery segments, dim white depleted segments, and blinking Esc at the original
 firmware's low-battery threshold. Unknown/stale readings have their own pattern.
-**The charge bands are experimental, not calibrated percentages.** This candidate
-has passed offline checks but has **not been flashed or hardware-confirmed**;
-the tested v5 image above is unchanged. See [battery findings and candidate](BATTERY-TEST.md).
+**The charge bands are experimental, not calibrated percentages.** The owner has
+started testing battery candidate v1 on battery power; no discharge/calibration
+results are recorded yet. The latest source also adds the fixed layer-key colours
+above, packaged separately as `candidate-layer-key-colours-v1.bin/.hex` and not
+yet hardware-tested. The preserved v5 image is unchanged. See the
+[current handoff](docs/HANDOFF.md) and [battery findings](BATTERY-TEST.md).
 
 ### The shortcuts you'll actually use
 

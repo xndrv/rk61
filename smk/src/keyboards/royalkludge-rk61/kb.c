@@ -8,6 +8,12 @@ uint8_t rk61_led_override_colour(void)
     return RK61_COLOUR_NORMAL;
 }
 
+uint8_t rk61_led_layer_key_colour(uint8_t column)
+{
+    (void)column;
+    return RK61_COLOUR_NORMAL;
+}
+
 uint8_t rk61_led_connection_colour(void)
 {
     return RK61_COLOUR_NORMAL;

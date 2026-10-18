@@ -6,9 +6,34 @@
 **Start here when resuming this project.** Working directory: `/home/xander/rk61-recovery/`.
 Firmware checkout: `/home/xander/rk61-recovery/smk/`.
 
-## Current source: unflashed battery-gauge candidate
+## Current source: fixed layer-key colours — unflashed
 
-**Latest source differs from owner-tested v5.** It adds a five-key battery bar on
+Physical **L1 / L2 / L3 / Fn** now keep **green / blue / magenta / yellow** in every
+base/held layer. As requested, they follow main brightness and toggle (zero turns
+them off); the battery bar is unchanged. Only row 4 / columns 2, 8, 10, 13 override
+the background, using PWM00/01/02. Earlier diagnostic layouts have no overrides.
+No keymap, radio/battery policy, GPIO drive, period or scheduling changes.
+
+New local application: `candidate-layer-key-colours-v1.bin` (61,440 bytes), matching
+`.hex`. BIN SHA-256:
+`fa7a492563040d3bfbeb4f13930de01c3878a280ed7bf1af9c7aa1157fabcd60`.
+HEX SHA-256:
+`f02c2ebdab316a55a52709208c5b27e0f0865caf0e6006886add7294fb5a4f77`.
+Highest linked address 0x5472, below 0xEC00. ISP enabled; sleep disabled.
+SDCC builds and interrupt/overlay checks pass for all three RK61 targets; all
+46 regressions pass, with expanded pixel/brightness/layer/battery checks.
+Editor diagnostics are clean. This new candidate has not been flashed; hardware
+appearance/mapping/current/temperature remain unvalidated. See the current
+[KEYMAP checklist/command](../KEYMAP.md#current-source-fixed-layer-key-colours--unflashed).
+The older battery-v1 candidate, preserved v5 and stock artifacts are unchanged.
+
+## Battery-gauge candidate v1 — owner testing in progress
+
+The owner reports leaving battery candidate v1 running on battery to test it;
+no discharge/threshold results have been provided. Do not treat that as a
+confirmed charge curve or exhaustive hardware pass.
+
+**The battery-gauge change differs from owner-tested v5.** It adds a five-key battery bar on
 physical Esc/1/2/3/4, dim white depleted segments, and blinking Esc using the stock
 low-battery threshold. Battery sensing is decoded from the radio's split four-bit
 value, not a new MCU ADC or NuPhy's decoder. Unknown/stale status is distinct.
@@ -21,8 +46,9 @@ owner status vectors, timing/filtering, validation, limits and user-run flashing
 `candidate-battery-v1.bin/.hex` are new local ignored artifacts. BIN SHA-256:
 `7f94cb071437dc8286412d02ab5c143ed4b51d3f8908f0bfca433fa1d9b474d6`.
 Highest linked address 0x53AC; ISP enabled. All three SDCC RK61 builds and interrupt
-checks pass; 46 regressions pass. No flash performed. Tested v5 and older images
-are unchanged; use their separate paths for recovery, never this untested image.
+checks pass; 46 regressions pass. The owner subsequently started testing v1;
+the agent performed no flash. Tested v5 and older images are unchanged; use their
+separate paths for recovery, not an experimental candidate.
 
 ## Current baseline
 
@@ -315,7 +341,8 @@ Within `smk/`:
 - `layouts/led-test/`: LED driver and earlier LED map.
 - `layouts/rf-test/layout.c`: **current all-mode keymap**, in physical key order.
 - `layouts/rf-test/keymap.h`: named base/L1/L2/L3/Fn layers and 61-key ANSI-to-matrix helper.
-- `lighting.h`, `layouts/rf-test/lighting.c`: palette/bounds and all-mode layer-colour policy.
+- `lighting.h`, `layouts/rf-test/lighting.c`: palette/bounds, all-mode held-layer
+  colours and fixed physical bottom-row layer-key colour policy.
 - `layouts/led-test/indicators.c`: shared blanked/multiplexed PWM driver, nine-colour palette and brightness controls.
 - Board `kb.c`: no-layer/no-status override hooks for earlier wired/LED diagnostic layouts.
 - `layouts/rf-test/battery.c/.h`: stock battery-code bands, filtering and stale expiry;

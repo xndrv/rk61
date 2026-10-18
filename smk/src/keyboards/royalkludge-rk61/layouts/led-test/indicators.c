@@ -139,6 +139,7 @@ bool indicators_update_step(keyboard_state_t *keyboard, uint8_t current_step)
     if (led_started) {
         const uint8_t  override          = rk61_led_override_colour();
         const uint8_t  colour            = override < RK61_COLOUR_COUNT ? override : led_colour;
+        const uint8_t  layer_key_colour  = rk61_led_layer_key_colour(led_col);
         uint8_t        status_colour     = rk61_led_connection_colour();
         const bool     status_here       = led_col < 5 && status_colour < RK61_COLOUR_COUNT;
         const uint8_t  battery           = rk61_led_battery_state();
@@ -158,14 +159,15 @@ bool indicators_update_step(keyboard_state_t *keyboard, uint8_t current_step)
                 status_brightness = 0; // deliberate low-battery blink, not blocking
             }
         }
-        // Index 0 is background; index 1 is row 0 (Esc and physical 1..4).
-        // A constant array index avoids SDCC's constant-branch warnings in PAINT.
-        uint16_t pulses[2][3];
+        // Index 0 is background, 1 is row 0 (battery), 2 is row 4 (layer keys).
+        // Constant row indices keep the other rows in each column unchanged.
+        uint16_t pulses[3][3];
         for (uint8_t group = 0; group < 3; group++) {
             pulses[0][group] = colour_pulse(colour, group, brightness);
             pulses[1][group] = status_here ? colour_pulse(status_colour, group, status_brightness) : pulses[0][group];
+            pulses[2][group] = layer_key_colour < RK61_COLOUR_COUNT ? colour_pulse(layer_key_colour, group, brightness) : pulses[0][group];
         }
-#define PAINT(channel, off, group, populated, row) SET_PWM_DUTY_2(channel, (uint16_t)((off) + pulses[(row) == 0][group]));
+#define PAINT(channel, off, group, populated, row) SET_PWM_DUTY_2(channel, (uint16_t)((off) + pulses[((row) == 0) + 2 * ((row) == 4)][group]));
         LED_ACTIVE_CHANNELS(PAINT)
 #undef PAINT
         if (brightness || status_here) {
