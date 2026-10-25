@@ -77,6 +77,25 @@ int main(void) {
     rk61_battery_expire(33); expect(5); // wrap-safe age 39
     rk61_battery_expire(34); expect(0);
     observe(6, 35); expect(3); // immediate recovery from unknown
+    // Physical power OFF cannot turn a valid low (or stale) status into a
+    // battery warning. The first fresh reading after ON is accepted immediately.
+    rk61_battery_set_available(false, 36); expect(RK61_BATTERY_UNAVAILABLE);
+    for (unsigned code = 0; code < 16; ++code) {
+        observe(code, (uint8_t)(40 + code)); expect(RK61_BATTERY_UNAVAILABLE);
+    }
+    make(0, 0); response[1] ^= 1;
+    rk61_battery_observe(response, 60); expect(RK61_BATTERY_UNAVAILABLE);
+    rk61_battery_expire(100); expect(RK61_BATTERY_UNAVAILABLE);
+    rk61_battery_expire(4); expect(RK61_BATTERY_UNAVAILABLE); // epoch wrap
+    rk61_battery_set_available(true, 5); expect(RK61_BATTERY_UNKNOWN);
+    observe(10, 6); expect(5);
+    rk61_battery_set_available(true, 7); expect(5); // unchanged power keeps data
+    observe(7, 8); observe(7, 9); expect(5); // partial confirmation
+    rk61_battery_set_available(false, 10); expect(RK61_BATTERY_UNAVAILABLE);
+    rk61_battery_set_available(true, 11); expect(RK61_BATTERY_UNKNOWN);
+    observe(2, 12); expect(0x81); // genuine powered low warning is preserved
+    observe(9, 13); observe(9, 14); expect(0x81);
+    observe(9, 15); expect(5);
     puts("PASS: exhaustive split-code/checksum decoding, stock vectors/bands, filtering/low/stale/wrap");
 }
 """

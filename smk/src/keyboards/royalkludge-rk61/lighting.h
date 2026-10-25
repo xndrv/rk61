@@ -27,11 +27,13 @@ enum rk61_led_colour {
 #define RK61_LED_EMPTY_PULSE     8u
 
 // One atomic byte publishes the gauge to the LED ISR: count 1..5 and low flag.
-// Zero means unknown, not discharged. Earlier diagnostics disable the override.
-#define RK61_BATTERY_UNKNOWN 0u
-#define RK61_BATTERY_LOW     0x80u
-#define RK61_BATTERY_COUNT   0x07u
-#define RK61_STATUS_FRAMES   32u // approximate half-second; scan-timed, not a wall clock
+// Zero means unknown, not discharged. Unavailable is the physical power-off
+// state, not a measurement. Earlier diagnostics disable the override.
+#define RK61_BATTERY_UNKNOWN     0u
+#define RK61_BATTERY_UNAVAILABLE 0x40u
+#define RK61_BATTERY_LOW         0x80u
+#define RK61_BATTERY_COUNT       0x07u
+#define RK61_STATUS_FRAMES       32u // approximate half-second; scan-timed, not a wall clock
 
 // Called by the LED ISR: return NORMAL to use the user's selected base colour.
 uint8_t rk61_led_override_colour(void);

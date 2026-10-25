@@ -138,7 +138,7 @@ void rk61_radio_status(void)
         return;
     }
     const bool ack = query_status();
-    dprintf("RF ack=%u rx=%02x %02x %02x %02x valid=%u P55=%u P56=%u battery_code=%u\r\n", (unsigned)ack, (unsigned)response[0], (unsigned)response[1], (unsigned)response[2], (unsigned)response[3], (unsigned)rk61_packet_status_valid(response), (unsigned)P5_5, (unsigned)P5_6, (unsigned)rk61_packet_battery_code(response));
+    dprintf("RF ack=%u rx=%02x %02x %02x %02x valid=%u P55=%u P56=%u battery_code=%u battery_display=%02x\r\n", (unsigned)ack, (unsigned)response[0], (unsigned)response[1], (unsigned)response[2], (unsigned)response[3], (unsigned)rk61_packet_status_valid(response), (unsigned)P5_5, (unsigned)P5_6, (unsigned)rk61_packet_battery_code(response), (unsigned)rk61_led_battery_state());
     ack; // dprintf is a no-op in release builds
 }
 

@@ -119,12 +119,14 @@ ROUTING_HARNESS = r'''
 #include <assert.h>
 #include "mock.h"
 #include "radio.h"
+#include "battery.h"
 REGISTERS
 static int last_link = -1, paired, selections, releases, usb_reports, radio_reports;
 static bool configured = true;
 bool ep1_free = true, ep2_free = true;
 bool usb_is_configured(void) { return configured; }
-void rk61_radio_init(void) {}
+uint8_t rk61_led_status_clock(void) { return 0; }
+void rk61_radio_init(void) { rk61_battery_init(0); }
 void rk61_radio_select(bool wireless) { assert(!wireless); last_link = -1; ++selections; }
 void rk61_radio_select_link(uint8_t link, bool pairing) {
     assert(link <= 3 && (!pairing || link));
@@ -159,6 +161,7 @@ int main(void) {
     P5_6 = 1;
     kb_init();
     assert(!radio_mode && selections == 1);
+    assert(rk61_led_battery_state() == RK61_BATTERY_UNAVAILABLE);
     kb_update(); assert(battery_tasks == 1); // poll even in wired mode
     assert(rk61_led_connection_colour() == RK61_COLOUR_MAGENTA);
     assert(!kb_process_record(RK61_BT_PAIR, true)); // no pairing in USB mode
@@ -209,6 +212,7 @@ int main(void) {
 
     // A stable physical change takes over; BT slot 3 was remembered above.
     move_switches(0);
+    assert(rk61_led_battery_state() == RK61_BATTERY_UNKNOWN);
     assert(radio_mode && radio_link == 0 && !paired);
     assert(rk61_led_connection_colour() == RK61_COLOUR_ORANGE);
     move_switches(1);
@@ -217,7 +221,15 @@ int main(void) {
     move_switches(0); assert(radio_link == 0);
     move_switches(1); assert(radio_link == 2); // RAM-only last Bluetooth slot
     assert(rk61_led_connection_colour() == RK61_COLOUR_TEAL);
-    move_switches(3); assert(!radio_mode); // power-off/wired input wins
+    // Manual wired mode with power still ON keeps actual battery readings.
+    const uint8_t charged[4] = {0xbb, 0x30, 0x25, 0};
+    rk61_battery_observe(charged, 0);
+    assert(rk61_led_battery_state() == 5);
+    kb_process_record(RK61_USB_MODE, true);
+    assert(!radio_mode && rk61_led_battery_state() == 5);
+    kb_update(); assert(rk61_led_battery_state() == 5);
+    move_switches(3); assert(!radio_mode);
+    assert(rk61_led_battery_state() == RK61_BATTERY_UNAVAILABLE); // power-off/wired input wins
     move_switches(2); assert(!radio_mode); // selector doesn't override wired input
     assert(rk61_led_connection_colour() == RK61_COLOUR_MAGENTA);
 
@@ -229,9 +241,12 @@ int main(void) {
     P5_6 = 1; poll(100);
     P5_5 = 0; poll(300); // return to accepted state; resets debounce
     assert(!radio_mode && selections == before);
+    assert(rk61_led_battery_state() == RK61_BATTERY_UNAVAILABLE);
     P5_6 = 0; P5_5 = 1;
     poll(255); assert(!radio_mode && selections == before);
+    assert(rk61_led_battery_state() == RK61_BATTERY_UNAVAILABLE);
     poll(1); assert(radio_mode && radio_link == 2 && !paired);
+    assert(rk61_led_battery_state() == RK61_BATTERY_UNKNOWN);
     before = selections; poll(500); assert(selections == before);
 
     // The latest startup state survives enumeration, including release before
@@ -269,6 +284,7 @@ int main(void) {
     for (unsigned bits = 0; bits < 4; ++bits) {
         P5_5 = bits & 1; P5_6 = (bits >> 1) & 1;
         kb_init();
+        assert(rk61_led_battery_state() == ((bits & 2) ? RK61_BATTERY_UNAVAILABLE : RK61_BATTERY_UNKNOWN));
         if (bits & 2) {
             assert(!radio_mode && rk61_led_connection_colour() == RK61_COLOUR_MAGENTA);
         } else {
@@ -467,7 +483,7 @@ class BluetoothHostChecks(unittest.TestCase):
         self.run_harness(TIMER_HARNESS, [])
 
     def test_real_routing_and_pairing_guards(self):
-        self.run_harness(ROUTING_HARNESS, [])
+        self.run_harness(ROUTING_HARNESS, [str(SOURCE / "battery.c"), str(SOURCE / "packet.c")])
 
     def test_real_radio_command_sequences(self):
         self.run_harness(SEQUENCE_HARNESS, [str(SOURCE / "packet.c"), str(SOURCE / "battery.c")])

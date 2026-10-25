@@ -23,8 +23,20 @@ uint8_t rk61_led_battery_state(void)
     return display_state;
 }
 
+void rk61_battery_set_available(bool available, uint8_t now)
+{
+    if (!available) {
+        display_state = RK61_BATTERY_UNAVAILABLE;
+        confirmations = 0;
+    } else if (display_state == RK61_BATTERY_UNAVAILABLE) {
+        // Do not resurrect a pre-switch reading or partial confirmation.
+        rk61_battery_init(now);
+    }
+}
+
 void rk61_battery_expire(uint8_t now)
 {
+    if (display_state == RK61_BATTERY_UNAVAILABLE) return;
     if ((uint8_t)(now - last_valid) >= RK61_BATTERY_STALE_EPOCHS) {
         display_state = RK61_BATTERY_UNKNOWN;
         confirmations = 0;
@@ -33,6 +45,7 @@ void rk61_battery_expire(uint8_t now)
 
 void rk61_battery_observe(const uint8_t response[4], uint8_t now)
 {
+    if (display_state == RK61_BATTERY_UNAVAILABLE) return;
     rk61_battery_expire(now);
     const uint8_t code = rk61_packet_battery_code(response);
     if (code == 255u) {

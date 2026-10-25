@@ -95,10 +95,18 @@ battery segments, dim white depleted segments, and blinking Esc at the original
 firmware's low-battery threshold. Unknown/stale readings have their own pattern.
 **The charge bands are experimental, not calibrated percentages.** The owner has
 started testing battery candidate v1 on battery power; no discharge/calibration
-results are recorded yet. The latest source also adds the fixed layer-key colours
-above, packaged separately as `candidate-layer-key-colours-v1.bin/.hex` and not
-yet hardware-tested. The preserved v5 image is unchanged. See the
+results are recorded yet. The latest `candidate-battery-power-v3.bin/.hex` includes
+fixed layer-key colours and responsive startup. It also suppresses the false low
+warning with physical power OFF + USB: Esc stays steady and keys 1–4 follow
+the current base/layer colour, brightness and lighting toggle.
+Power ON keeps battery sensing active, including with Fn+T selecting wired output.
+The owner reports v3 working; charge calibration remains unverified, and this
+change cannot recover a reading from an unavailable sensor. The preserved v5 image is unchanged. See the
 [current handoff](docs/HANDOFF.md) and [battery findings](BATTERY-TEST.md).
+
+The latest naming candidate, `candidate-usb-name-v1.bin/.hex`, retains those
+changes and replaces the USB manufacturer's contact address with **Royal Kludge**.
+See the [handoff for its flash command](docs/HANDOFF.md#current-source-usb-name-candidate-v1--unflashed).
 
 ### New source candidate: responsive startup
 

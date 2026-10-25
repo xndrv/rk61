@@ -141,11 +141,13 @@ bool indicators_update_step(keyboard_state_t *keyboard, uint8_t current_step)
         const uint8_t  colour            = override < RK61_COLOUR_COUNT ? override : led_colour;
         const uint8_t  layer_key_colour  = rk61_led_layer_key_colour(led_col);
         uint8_t        status_colour     = rk61_led_connection_colour();
-        const bool     status_here       = led_col < 5 && status_colour < RK61_COLOUR_COUNT;
         const uint8_t  battery           = rk61_led_battery_state();
+        // Unavailable sensing leaves keys 1..4 in the normal layer/base
+        // lighting, including ordinary brightness/toggle. Esc keeps its route.
+        const bool     status_here       = led_col < 5 && status_colour < RK61_COLOUR_COUNT && (battery != RK61_BATTERY_UNAVAILABLE || !led_col);
         const uint16_t brightness        = (uint16_t)led_brightness_level << 4;
         uint16_t       status_brightness = RK61_LED_STATUS_PULSE;
-        if (status_here) {
+        if (status_here && battery != RK61_BATTERY_UNAVAILABLE) {
             if (battery == RK61_BATTERY_UNKNOWN) {
                 // Keep Esc's route visible; pulse the other four neutral keys.
                 if (led_col) {

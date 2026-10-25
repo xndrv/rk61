@@ -6,7 +6,84 @@
 **Start here when resuming this project.** Working directory: `/home/xander/rk61-recovery/`.
 Firmware checkout: `/home/xander/rk61-recovery/smk/`.
 
-## Current source: responsive startup — unflashed
+## Current source: USB-name candidate v1 — unflashed
+
+RK61 board options now set USB manufacturer to **Royal Kludge**, overriding SMK's
+fallback contact address. Product stays `RK61 SMK wireless test` on the all-mode
+target (`RK61 SMK prototype` on the diagnostic targets). VID/PID and serial stay
+unchanged. No radio names, radio firmware, pairing or runtime policy changes.
+The new image includes the battery-power-v3 changes the owner reports working.
+
+Application: `candidate-usb-name-v1.bin/.hex`, 61,440-byte BIN; highest linked
+address 0x58E7, below 0xEC00. ISP enabled; sleep disabled.
+BIN SHA-256: `d3f9c504151a8e15d185a91e84564202afc9a2efc08c00ab46c4809673d64497`.
+HEX SHA-256: `40e882d5bb782ce4e7181b830f008a050ee46ccaa3c042a6fcbeff13eb7bc879`.
+All three SDCC builds/interrupt/overlay checks pass; all 22 Bluetooth-suite
+regressions pass. Linked-image inspection confirms `Royal Kludge` is present and
+the contact address absent in all three RK61 images. This naming candidate has
+not been flashed/hardware-tested by the agent. Prior candidate images and
+preserved artifacts are unchanged. Run from the owner's terminal:
+
+```sh
+sudo /home/xander/rk61-recovery/toolchain/bin/sinowisp write \
+  --platform sh68f90 --vendor_id 0x258a --product_id 0x00e1 \
+  --format bin --reboot true \
+  /home/xander/rk61-recovery/candidate-usb-name-v1.bin
+```
+
+## Battery power-state candidate v3 — owner reports working
+
+At the owner's request, unavailable battery sensing now leaves physical keys
+1–4 in ordinary base/held-layer lighting, following main brightness/toggle.
+Esc remains a steady route indicator. The power-state guard and all available
+battery behavior from v2 are unchanged. No routing, GPIO drive, PWM level,
+pairing, startup or charging-policy changes.
+
+Application: `candidate-battery-power-v3.bin/.hex`, 61,440-byte BIN; highest linked
+address 0x58F1, below 0xEC00. ISP enabled; sleep disabled.
+BIN SHA-256: `ce721b9e734f562f1a307b14b1c39b25ae13e54d7396f7644facd089e1cf8e30`.
+HEX SHA-256: `7995cf3b47821c0552ed8e1ace29fea2e9d1a26493898d963fef25668ceba1ae`.
+All three SDCC builds/interrupt checks and all 48 regressions pass, with expanded
+unavailable-pixel checks at all brightness levels/layers/modes and blink phases.
+The owner subsequently reports **"Alright that works"** before requesting the
+USB-name change. This is a positive smoke-test report for the requested battery
+lighting behavior, not exhaustive calibration/pin/current/reconnection validation.
+Prior candidates and preserved artifacts are unchanged. See the
+[v3 notes](../BATTERY-TEST.md#power-state-candidate-v3--owner-reports-working).
+
+## Battery power-state candidate v2 — unflashed
+
+The owner reports a false Esc-only battery warning with USB connected and power
+OFF; power ON restores correct-looking readings even with USB attached. New
+source marks sensing unavailable using the existing **debounced P5.6 high =
+power-off/wired** interpretation, independently of the manually selected route.
+Esc then stays steady in the route colour; keys 1–4 stay dark. Returning to power
+ON clears stale/filter history and accepts the first fresh valid sample. Fn+T
+while power ON preserves battery sensing; genuine powered low warnings remain.
+No change to routing, charging controls, GPIO drive, PWM levels, or radio
+firmware/pairing.
+Fn+Y adds `battery_display` (`40` unavailable, `00` unknown, `81` low).
+
+See [battery candidate v2](../BATTERY-TEST.md#power-state-candidate-v2--unflashed)
+for the user-run command, hardware checklist and limits. P5.6/power-state mapping
+still needs specific hardware verification; raw OFF/ON radio replies have not
+been supplied. This is a display guard, not recovery of off-state cell voltage
+or a port of stock's separate P4.4/P7.7 power/charging condition.
+
+Application: `candidate-battery-power-v2.bin/.hex`, 61,440-byte BIN; highest linked
+address 0x590F (below 0xEC00). ISP enabled, sleep disabled.
+BIN SHA-256: `2159354b5339386e3e40038d36ab8c084ebfc724e979a8a6cedfc85ab622c932`.
+HEX SHA-256: `6acf09cc8ae914ef505b31850ead381dc37e7f85a35ad6bf517827670a4d9e49`.
+All three SDCC builds/interrupt/overlay checks and all 48 regressions pass,
+including expanded power-state, filtering, routing-independence and pixel checks.
+No new flash or hardware result for this candidate is recorded. Prior candidates
+and preserved artifacts are unchanged; v5 checksums pass.
+
+**Routing report withdrawn:** the owner subsequently reports that dongle mode
+behaves as expected and asks to focus on the battery display. No routing-policy
+change was made in response to that report.
+
+## Responsive startup candidate — unflashed
 
 `candidate-startup-v1.bin/.hex` adds nonblocking startup on top of the battery
 bar and fixed layer-key colours. The all-mode target opts out of the shared USB

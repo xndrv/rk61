@@ -18,6 +18,7 @@ keyboards += {
         'options' : {
             'vendor_id' : '0x258a',
             'product_id' : '0x00e1',
+            'manufacturer' : 'Royal Kludge',
             'product' : 'RK61 SMK prototype',
         },
     },
@@ -39,6 +40,7 @@ keyboards += {
         'options' : {
             'vendor_id' : '0x258a',
             'product_id' : '0x00e1',
+            'manufacturer' : 'Royal Kludge',
             'product' : 'RK61 SMK wireless test',
         },
     },

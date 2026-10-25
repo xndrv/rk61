@@ -130,12 +130,12 @@ static void check_frame(unsigned g, unsigned r, unsigned b,
     for (unsigned slot = 0; slot < 14; ++slot) {
         const unsigned phase = rk61_led_status_clock() & 1;
         assert(indicators_update_step(0, 0) == (expected_col == 13));
-        bool status_here = indicator && expected_col < 5;
+        bool status_here = indicator && expected_col < 5 && (battery_display != 0x40 || expected_col == 0);
         unsigned eg = sg, er = sr, eb = sb;
         if (status_here) {
             if (!battery_display && expected_col) {
                 eg = er = eb = phase ? 0 : 8;
-            } else if (battery_display && expected_col >= (battery_display & 7)) {
+            } else if (battery_display && battery_display != 0x40 && expected_col >= (battery_display & 7)) {
                 eg = er = eb = 8;
             } else if ((battery_display & 0x80) && !expected_col && phase) {
                 eg = er = eb = 0;
@@ -281,7 +281,7 @@ int main(void) {
     }
     // Every gauge state, mode, background level and held layer. Run long enough
     // to cover both blink phases; compare physical PWM banks independently.
-    static const uint8_t states[] = {0, 1, 2, 3, 4, 5, 0x81};
+    static const uint8_t states[] = {0, 1, 2, 3, 4, 5, 0x81, 0x40};
     for (unsigned mode = 0; mode < 3; ++mode) {
         connection = modes[mode];
         for (unsigned state = 0; state < sizeof(states); ++state) {

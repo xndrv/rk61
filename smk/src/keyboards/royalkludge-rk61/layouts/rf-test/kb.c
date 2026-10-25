@@ -5,6 +5,7 @@
 #include "host.h"
 #include "debug.h"
 #include "lighting.h"
+#include "battery.h"
 
 // Stock 0x7C43..0x7CE8: P5.6 high selects wired; otherwise P5.5 high
 // selects Bluetooth and low selects dongle. Hardware switch polarity still needs
@@ -74,6 +75,9 @@ static uint8_t read_switches(void)
 
 static void apply_physical_mode(void)
 {
+    // P5.6 high is the existing power-off/wired input. Manual Fn+T with
+    // power ON must keep battery sensing, even though output is also wired.
+    rk61_battery_set_available(!(physical_state & 2u), rk61_led_status_clock());
     if (physical_state & 2u) {
         set_mode(false, 0);
     } else {
