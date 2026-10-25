@@ -6,7 +6,32 @@
 **Start here when resuming this project.** Working directory: `/home/xander/rk61-recovery/`.
 Firmware checkout: `/home/xander/rk61-recovery/smk/`.
 
-## Current source: fixed layer-key colours — unflashed
+## Current source: responsive startup — unflashed
+
+`candidate-startup-v1.bin/.hex` adds nonblocking startup on top of the battery
+bar and fixed layer-key colours. The all-mode target opts out of the shared USB
+enumeration wait; earlier diagnostic targets retain it. Radio init now stages
+work, and `kb_update()` advances it in **every** route. No radio traffic is sent
+until a conservative timer-derived 1500-ms allowance has passed; link commands
+retain their 20-ms gaps without busy waits. Lighting and matrix processing run
+throughout. Latest early keyboard/media/system states are retained; route changes
+cancel pending old-route work, and explicit pairing remains slot-specific.
+
+New SH68F90 `systick_millis()` counts the existing timer's programmed 100/400-us
+intervals with atomic reads and wrap-safe deadlines. It excludes ISR/dispatch
+overshoot, so these are minimum allowances, not calibrated wall-clock timings.
+The battery gauge retains its separate scan-derived epoch. No timer reload,
+GPIO drive, PWM level, ISP or sleep policy changes.
+
+BIN SHA-256: `c7565c4ceb383a60c4a4f6d9434a8ebf5541268d70e940bcf866139e2d2f628b`.
+HEX SHA-256: `1525cb397ae02d0c54a3a11516aa51e702647aeb82910481fa20880a3f7d8bde`.
+Application size 61,440 bytes; highest linked address 0x5862 (below 0xEC00).
+All three SDCC RK61 builds and interrupt/overlay checks and all 48 regressions pass. See
+[STARTUP-TEST.md](../STARTUP-TEST.md) for host checks and a hardware checklist.
+No flash or new hardware timing result is recorded. V5 checksums pass; older
+candidates and preserved artifacts are unchanged.
+
+## Layer-key colour candidate — unflashed
 
 Physical **L1 / L2 / L3 / Fn** now keep **green / blue / magenta / yellow** in every
 base/held layer. As requested, they follow main brightness and toggle (zero turns

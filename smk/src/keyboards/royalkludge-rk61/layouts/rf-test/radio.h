@@ -3,6 +3,8 @@
 #include <stdbool.h>
 #include "report.h"
 
+// Initialization/selection only stage work. Call task in every output mode;
+// it preserves the radio boot allowance and command spacing without busy waits.
 void rk61_radio_init(void);
 void rk61_radio_select(bool wireless);
 void rk61_radio_select_link(uint8_t link, bool pairing);

@@ -2,7 +2,7 @@
 #include "radio.h"
 #include "packet.h"
 #include "delay.h"
-#include "watchdog.h"
+#include "systick.h"
 #include "debug.h"
 #include "battery.h"
 #include "lighting.h"
@@ -15,12 +15,26 @@ static uint8_t pending_tries;
 static uint8_t response[4];
 static uint8_t last_status_poll;
 
-static void wait_ms(uint16_t ms)
+// Main-loop state machine: no radio traffic before the boot allowance expires.
+#define RADIO_BOOT_MS        1500u
+#define RADIO_COMMAND_GAP_MS 20u
+enum {
+    SELECT_IDLE,
+    SELECT_WAKE,
+    SELECT_LINK,
+    SELECT_REPEAT,
+    SELECT_STATUS
+};
+static bool     boot_ready;
+static uint16_t boot_since, stage_since;
+static uint8_t  select_stage, selected_link;
+static bool     selected_wireless, selected_pairing;
+static uint16_t consumer_usage, system_usage;
+static bool     extra_pending;
+
+static bool link_ready(void)
 {
-    while (ms--) {
-        watchdog_kick();
-        delay_ms(1);
-    }
+    return boot_ready && select_stage == SELECT_IDLE;
 }
 
 static void bus_release(void)
@@ -120,6 +134,9 @@ static bool query_status(void)
 
 void rk61_radio_status(void)
 {
+    if (!link_ready()) {
+        return;
+    }
     const bool ack = query_status();
     dprintf("RF ack=%u rx=%02x %02x %02x %02x valid=%u P55=%u P56=%u battery_code=%u\r\n", (unsigned)ack, (unsigned)response[0], (unsigned)response[1], (unsigned)response[2], (unsigned)response[3], (unsigned)rk61_packet_status_valid(response), (unsigned)P5_5, (unsigned)P5_6, (unsigned)rk61_packet_battery_code(response));
     ack; // dprintf is a no-op in release builds
@@ -135,7 +152,11 @@ void rk61_radio_init(void)
     pending_tries    = 0;
     last_status_poll = rk61_led_status_clock();
     rk61_battery_init(last_status_poll);
-    wait_ms(1500); // allow the separate radio controller to finish its boot
+    boot_ready     = false;
+    boot_since     = systick_millis();
+    select_stage   = SELECT_IDLE;
+    consumer_usage = system_usage = 0;
+    extra_pending                 = false;
 }
 
 void rk61_radio_select_link(uint8_t link, bool pairing)
@@ -145,17 +166,13 @@ void rk61_radio_select_link(uint8_t link, bool pairing)
     if (link > 3 || (pairing && link == 0)) {
         return;
     }
-    pending_tries = 0;
-    command(0x0C, 0, 0);
-    wait_ms(20);
-    command(1, pairing ? 1 : 0, link);
-    if (!pairing) {
-        wait_ms(20);
-        command(1, 0, link);
-    }
-    // Do not reassert a non-pairing command while Bluetooth is advertising.
-    dprintf("RF link=%u pairing=%u\r\n", (unsigned)link, (unsigned)pairing);
-    rk61_radio_status();
+    pending_tries  = 0;
+    consumer_usage = system_usage = 0;
+    extra_pending                 = false;
+    selected_wireless             = true;
+    selected_link                 = link;
+    selected_pairing              = pairing;
+    select_stage                  = SELECT_WAKE;
 }
 
 void rk61_radio_select(bool wireless)
@@ -163,10 +180,40 @@ void rk61_radio_select(bool wireless)
     if (wireless) {
         rk61_radio_select_link(0, false);
     } else {
-        pending_tries = 0;
-        command(6, 1, 0); // stock USB mode command
-        dprintf("RF route=USB\r\n");
-        rk61_radio_status();
+        pending_tries  = 0;
+        consumer_usage = system_usage = 0;
+        extra_pending                 = false;
+        selected_wireless             = false;
+        selected_pairing              = false;
+        select_stage                  = SELECT_WAKE;
+    }
+}
+
+// At most one command per main-loop pass. A new selection replaces any staged
+// old selection, including an explicit pairing request that has not yet sent.
+static void select_task(uint16_t now)
+{
+    switch (select_stage) {
+        case SELECT_WAKE:
+            command(selected_wireless ? 0x0C : 6, selected_wireless ? 0 : 1, 0);
+            stage_since  = systick_millis();
+            select_stage = selected_wireless ? SELECT_LINK : SELECT_STATUS;
+            break;
+        case SELECT_LINK:
+            if ((uint16_t)(now - stage_since) < RADIO_COMMAND_GAP_MS) return;
+            command(1, selected_pairing ? 1 : 0, selected_link);
+            stage_since  = systick_millis();
+            select_stage = selected_pairing ? SELECT_STATUS : SELECT_REPEAT;
+            break;
+        case SELECT_REPEAT:
+            if ((uint16_t)(now - stage_since) < RADIO_COMMAND_GAP_MS) return;
+            command(1, 0, selected_link);
+            select_stage = SELECT_STATUS;
+            break;
+        case SELECT_STATUS:
+            query_status();
+            select_stage = SELECT_IDLE;
+            break;
     }
 }
 
@@ -178,6 +225,21 @@ static void queue_keyboard(uint8_t mods, const uint8_t *keys, const uint8_t *bit
 
 void rk61_radio_task(void)
 {
+    const uint16_t now = systick_millis();
+    if (!boot_ready) {
+        if ((uint16_t)(now - boot_since) < RADIO_BOOT_MS) return;
+        boot_ready = true;
+    }
+    if (select_stage != SELECT_IDLE) {
+        select_task(now);
+        return;
+    }
+    if (extra_pending) {
+        rk61_packet_extra(tx, consumer_usage, system_usage);
+        transmit(tx, 14);
+        extra_pending = false;
+        return;
+    }
     if (pending_tries) {
         --pending_tries;
         if (transmit(pending, 32)) {
@@ -190,6 +252,7 @@ void rk61_radio_battery_task(void)
 {
     const uint8_t now = rk61_led_status_clock();
     rk61_battery_expire(now);
+    if (!link_ready()) return;
     if (!pending_tries && (uint8_t)(now - last_status_poll) >= RK61_BATTERY_POLL_EPOCHS) {
         // Bounded existing bus transaction, in the main loop only. No wake,
         // route reassertion, pairing or debug spam in the periodic path.
@@ -209,12 +272,25 @@ void rk61_radio_nkro(__xdata report_nkro_t *report)
 
 void rk61_radio_extra(__xdata report_extra_t *report)
 {
-    rk61_packet_extra(tx, report->report_id == REPORT_ID_CONSUMER ? report->usage : 0, report->report_id == REPORT_ID_SYSTEM ? report->usage : 0);
-    transmit(tx, 14);
+    if (report->report_id == REPORT_ID_CONSUMER) {
+        consumer_usage = report->usage;
+    } else {
+        system_usage = report->usage;
+    }
+    extra_pending = true;
+    if (link_ready()) {
+        rk61_packet_extra(tx, consumer_usage, system_usage);
+        transmit(tx, 14);
+        extra_pending = false;
+    }
 }
 
 void rk61_radio_release(void)
 {
     queue_keyboard(0, 0, 0);
-    rk61_radio_task();
+    // Never advance a deferred selection while releasing the old route.
+    if (link_ready()) {
+        transmit(pending, 32);
+        pending_tries = 0;
+    }
 }

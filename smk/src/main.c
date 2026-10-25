@@ -83,7 +83,10 @@ void main(void)
     settings_dump();
 #endif
 
+// Boards opting out must retain early reports until USB is configured.
+#ifndef USB_START_WITHOUT_ENUM_WAIT
     usb_wait_for_enumeration();
+#endif
     indicators_start();
 
 #ifdef RF_ENABLED

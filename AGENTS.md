@@ -7,7 +7,7 @@
 - The all-mode port is in `smk/src/keyboards/royalkludge-rk61/layouts/rf-test/` and reuses the driver in `layouts/led-test/`.
 - The Git root is `/home/xander/rk61-recovery/`; `smk/` is vendored, normally tracked source, not a submodule/nested repo. Its original Git metadata is preserved locally under `.git/smk-upstream.git`. Do not assume upstream SMK HEAD contains this port.
 - Keep firmware source, tests, docs and reviewed `known-working/` artifacts tracked. Do not add ignored toolchains, builds, secrets, stock dumps or stock-containing bundles. See `VERSION_CONTROL.md`.
-- After a completed requested change, run the relevant validation and create a focused root-repo commit unless the user asks otherwise. Do not include unrelated edits, fabricate earlier history, or push without permission. Git does not automatically commit edits.
+- After a completed requested change, run the relevant validation. The user creates commits; do not make commits. Do not include unrelated edits, fabricate earlier history, or push without permission.
 - Hardware-confirmed: USB, Fn layer, LED on/off/channel cycling, dongle output, Bluetooth via the documented pairing test. Do not extrapolate this into exhaustive battery/reconnection/all-slot validation.
 - Keep ISP enabled. Never use preset-based/generated flash targets: this board is 258a:00e1, whereas the old RK61 flasher preset uses 00c7.
 - Flashing is a separate user-run privileged operation; the harness blocks sudo. Do not bypass that boundary. Do not flash a full 65,536-byte stock dump as an application payload.

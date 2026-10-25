@@ -100,6 +100,17 @@ above, packaged separately as `candidate-layer-key-colours-v1.bin/.hex` and not
 yet hardware-tested. The preserved v5 image is unchanged. See the
 [current handoff](docs/HANDOFF.md) and [battery findings](BATTERY-TEST.md).
 
+### New source candidate: responsive startup
+
+The latest source starts lighting and key processing without blocking on the
+radio boot delay or USB enumeration. Radio setup runs in the main loop, retaining
+the boot allowance and command spacing; wired reports wait only for USB to be
+configured. Early reports retain the latest held/released state, rather than
+replaying taps made before a connection is ready. Wireless boot and host
+reconnection still take time. `candidate-startup-v1.bin/.hex` includes the battery
+bar and fixed layer-key colours above; it has **not been hardware-tested**.
+See [startup validation and the user-run flash command](STARTUP-TEST.md).
+
 ### The shortcuts you'll actually use
 
 | Shortcut | Action |

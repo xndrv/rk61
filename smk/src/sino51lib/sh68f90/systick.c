@@ -6,6 +6,20 @@
 #define RELOAD_LED_SUBFRAME 0xFCDF // 65536 - 801, 400 us
 #define RELOAD_MATRIX_SCAN  0xFF37 // 65536 - 201, ~100 us against a ~320 us sweep
 
+static volatile uint16_t elapsed_ms;
+static uint8_t           elapsed_tenths;
+static uint8_t           armed_tenths;
+
+uint16_t systick_millis(void)
+{
+    uint16_t now;
+    __critical
+    {
+        now = elapsed_ms;
+    }
+    return now;
+}
+
 static void timer2_reload(uint16_t reload)
 {
     TR2    = 0;
@@ -18,9 +32,12 @@ static void timer2_reload(uint16_t reload)
 
 void systick_init(void)
 {
-    TR2   = 0;
-    T2CON = 0;
-    T2MOD = 0;
+    elapsed_ms     = 0;
+    elapsed_tenths = 0;
+    armed_tenths   = 4;
+    TR2            = 0;
+    T2CON          = 0;
+    T2MOD          = 0;
     timer2_reload(RELOAD_LED_SUBFRAME);
     TF2 = 0;
     ET2 = 1;
@@ -29,6 +46,7 @@ void systick_init(void)
 
 void systick_arm(systick_slot_t slot)
 {
+    armed_tenths = slot == SYSTICK_SLOT_MATRIX_SCAN ? 1 : 4;
     timer2_reload(slot == SYSTICK_SLOT_MATRIX_SCAN ? RELOAD_MATRIX_SCAN : RELOAD_LED_SUBFRAME);
 }
 
@@ -45,5 +63,10 @@ void systick_resume(void)
 void systick_interrupt_handler(void) __interrupt(_INT_TIMER2)
 {
     TF2 = 0;
+    elapsed_tenths += armed_tenths;
+    if (elapsed_tenths >= 10) {
+        elapsed_tenths -= 10;
+        ++elapsed_ms;
+    }
     tick_dispatch();
 }

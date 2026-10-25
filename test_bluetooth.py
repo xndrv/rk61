@@ -12,6 +12,12 @@ SOURCE = ROOT / "smk/src/keyboards/royalkludge-rk61/layouts/rf-test"
 
 
 class BluetoothImageChecks(wireless.WirelessImageChecks):
+    def test_startup_does_not_wait_for_usb(self):
+        assembly = (wireless.BUILD / f"{wireless.STEM}.ihx.p/main.asm").read_text()
+        main = assembly.split("_main:", 1)[1]
+        self.assertNotIn("lcall\t_usb_wait_for_enumeration", main)
+        self.assertIn("lcall\t_indicators_start", main)
+
     def test_bluetooth_shortcuts(self):
         toggle = self.led_toggle_keycode()
         for slot in range(3):
@@ -90,6 +96,18 @@ typedef struct { uint8_t report_id; uint16_t usage; } report_extra_t;
 void delay_us(uint16_t us);
 void delay_ms(uint16_t ms);
 void watchdog_kick(void);
+uint16_t systick_millis(void);
+typedef enum { SYSTICK_SLOT_MATRIX_SCAN, SYSTICK_SLOT_LED_SUBFRAME } systick_slot_t;
+void systick_arm(systick_slot_t slot);
+void tick_dispatch(void);
+#define __interrupt(x)
+extern uint8_t TR2, RCAP2H, RCAP2L, TH2, TL2, T2CON, T2MOD, TF2, ET2;
+bool usb_is_configured(void);
+extern bool ep1_free, ep2_free;
+#define EP1CON (ep1_free ? 0 : 1)
+#define EP2CON (ep2_free ? 0 : 1)
+#define _IEP1RDY 1
+#define _IEP2RDY 1
 void usb_send_report(report_keyboard_t *report);
 void usb_send_nkro(report_nkro_t *report);
 void usb_send_extra(report_extra_t *report);
@@ -103,6 +121,9 @@ ROUTING_HARNESS = r'''
 #include "radio.h"
 REGISTERS
 static int last_link = -1, paired, selections, releases, usb_reports, radio_reports;
+static bool configured = true;
+bool ep1_free = true, ep2_free = true;
+bool usb_is_configured(void) { return configured; }
 void rk61_radio_init(void) {}
 void rk61_radio_select(bool wireless) { assert(!wireless); last_link = -1; ++selections; }
 void rk61_radio_select_link(uint8_t link, bool pairing) {
@@ -137,11 +158,11 @@ static void move_switches(uint8_t bits) {
 int main(void) {
     P5_6 = 1;
     kb_init();
-    assert(!radio_mode && selections == 0);
+    assert(!radio_mode && selections == 1);
     kb_update(); assert(battery_tasks == 1); // poll even in wired mode
     assert(rk61_led_connection_colour() == RK61_COLOUR_MAGENTA);
     assert(!kb_process_record(RK61_BT_PAIR, true)); // no pairing in USB mode
-    assert(selections == 0);
+    assert(selections == 1);
     for (int slot = 1; slot <= 3; ++slot) {
         int before = selections;
         assert(!kb_process_record(RK61_BT1 + slot - 1, false));
@@ -213,6 +234,37 @@ int main(void) {
     poll(1); assert(radio_mode && radio_link == 2 && !paired);
     before = selections; poll(500); assert(selections == before);
 
+    // The latest startup state survives enumeration, including release before
+    // enumeration and a held NKRO report. Busy endpoints keep the state queued.
+    kb_process_record(RK61_USB_MODE, true);
+    configured = false;
+    report_keyboard_t early = {0}; early.mods = 2; early.keys[0] = 4;
+    before = usb_reports;
+    kb_send_report(&early); kb_update(); assert(usb_reports == before);
+    early.mods = early.keys[0] = 0;
+    kb_send_report(&early);
+    configured = true; ep1_free = false;
+    kb_update(); assert(usb_reports == before && usb_pending_kind == 1);
+    ep1_free = true; kb_update();
+    assert(usb_reports == before + 1 && usb_pending_keyboard.mods == 0);
+    assert(usb_pending_keyboard.keys[0] == 0 && usb_pending_kind == 0);
+    configured = false; report.mods = 1; kb_send_nkro(&report);
+    configured = true; ep2_free = false; kb_update();
+    assert(usb_pending_kind == 2);
+    ep2_free = true; kb_update(); assert(usb_pending_kind == 0);
+    assert(usb_pending_nkro.mods == 1);
+    configured = false;
+    report_extra_t media = {REPORT_ID_CONSUMER, 0xe9};
+    kb_send_extra(&media); media.usage = 0; kb_send_extra(&media);
+    media.report_id = REPORT_ID_SYSTEM; media.usage = 2; kb_send_extra(&media);
+    configured = true; ep2_free = false; kb_update(); assert(usb_extra_pending == 3);
+    ep2_free = true; kb_update(); assert(usb_extra_pending == 2);
+    assert(usb_pending_extra.usage == 0);
+    kb_update(); assert(usb_extra_pending == 0 && usb_pending_extra.usage == 2);
+    configured = false; kb_send_nkro(&report);
+    kb_process_record(RK61_BT1, true); configured = true;
+    assert(usb_pending_kind == 0 && usb_extra_pending == 0); // no old-host replay
+
     // Boot truth table: stock-derived pin polarity, not simulated hardware.
     for (unsigned bits = 0; bits < 4; ++bits) {
         P5_5 = bits & 1; P5_6 = (bits >> 1) & 1;
@@ -232,7 +284,9 @@ SEQUENCE_HARNESS = r'''
 #include "mock.h"
 REGISTERS
 static uint8_t bytes[256], accumulator, bits, clock_now;
-static unsigned count, rx_bit;
+static unsigned count, rx_bit, delayed_ms;
+static uint16_t time_now;
+uint16_t systick_millis(void) { return time_now; }
 static uint8_t incoming[4] = {255,255,255,255};
 uint8_t rk61_led_status_clock(void) { return clock_now; }
 static void set_response(uint8_t a, uint8_t b) {
@@ -252,7 +306,7 @@ void delay_us(uint16_t us) {
         if (++bits == 8) { assert(count < sizeof(bytes)); bytes[count++] = accumulator; bits = 0; }
     }
 }
-void delay_ms(uint16_t ms) { (void)ms; }
+void delay_ms(uint16_t ms) { delayed_ms += ms; }
 void watchdog_kick(void) {}
 #include "RADIO_PATH"
 #include "lighting.h"
@@ -263,13 +317,36 @@ static void check_frame(unsigned offset, uint8_t command_id, uint8_t a, uint8_t 
     for (unsigned i = 0; i < 6; ++i) sum += bytes[offset + i];
     assert((sum & 255) == 0x55);
 }
+static void finish_selection(void) {
+    rk61_radio_task(); time_now += 20;
+    rk61_radio_task(); time_now += 20;
+    rk61_radio_task(); rk61_radio_task();
+}
 int main(void) {
+    // Boot from a wrapping clock: every bus entry point stays silent, the
+    // latest route wins, and no busy delay is invoked by initialization.
+    time_now = 65000;
+    rk61_radio_init();
+    rk61_radio_select_link(1, false);
+    rk61_radio_select_link(2, true);
+    rk61_radio_status(); rk61_radio_battery_task(); rk61_radio_task();
+    assert(count == 0 && delayed_ms == 0);
+    time_now = (uint16_t)(65000u + 1499u); rk61_radio_task(); assert(count == 0);
+    time_now++; rk61_radio_task(); assert(count == 6);
+    check_frame(0, 0x0c, 0, 0);
+    time_now += 19; rk61_radio_task(); assert(count == 6);
+    time_now++; rk61_radio_task(); assert(count == 12);
+    check_frame(6, 1, 1, 2);
+    rk61_radio_task(); assert(count == 18);
+    rk61_radio_task(); assert(count == 18); // no repeat cancels pairing
+    count = bits = 0;
     rk61_radio_select_link(4, false);
     rk61_radio_select_link(0, true);
     assert(count == 0); // guards run before any radio transmission
     for (unsigned link = 0; link <= 3; ++link) {
         count = bits = 0;
         rk61_radio_select_link(link, false);
+        finish_selection();
         assert(count == 24);
         check_frame(0, 0x0c, 0, 0);
         check_frame(6, 1, 0, link);
@@ -278,6 +355,7 @@ int main(void) {
         if (link) {
             count = bits = 0;
             rk61_radio_select_link(link, true);
+            finish_selection();
             assert(count == 18); // no second command cancelling/restarting advertising
             check_frame(0, 0x0c, 0, 0);
             check_frame(6, 1, 1, link);
@@ -286,12 +364,33 @@ int main(void) {
     }
     count = bits = 0;
     rk61_radio_select(false);
+    finish_selection();
     assert(count == 12);
     check_frame(0, 6, 1, 0);
     check_frame(6, 0x0a, 0, 0);
 
+    // Startup reports coalesce, so a released key/media key isn't replayed as
+    // a stale press. A held key remains pending until selection is complete.
+    count = bits = 0; rk61_radio_init(); rk61_radio_select_link(1, false);
+    queue_keyboard(2, 0, 0); queue_keyboard(0, 0, 0);
+    report_extra_t extra = {REPORT_ID_CONSUMER, 0xe9};
+    rk61_radio_extra(&extra); extra.usage = 0; rk61_radio_extra(&extra);
+    rk61_radio_task(); assert(count == 0);
+    time_now += 1500; finish_selection();
+    assert(count == 24 && pending_tries == 3);
+    rk61_radio_task(); assert(count == 38); // latest media state
+    assert(bytes[28] == 0 && bytes[29] == 0);
+    rk61_radio_task(); assert(count == 70 && bytes[41] == 0); // modifiers released
+    // Mode changes cancel staged pairing before it reaches the wire.
+    count = bits = 0;
+    rk61_radio_select_link(3, true); rk61_radio_task();
+    rk61_radio_select(false); finish_selection();
+    assert(count == 18); check_frame(6, 6, 1, 0); check_frame(12, 0x0a, 0, 0);
+    assert(delayed_ms == 0);
+
     // Use the real RX bit loop, checksum decoder, filter and read-only poller.
     rk61_radio_init();
+    time_now += 1500; rk61_radio_task();
     assert(rk61_led_battery_state() == RK61_BATTERY_UNKNOWN);
     set_response(0x25, 0x38); // owner's Bluetooth reply -> battery code 10
     count = bits = 0;
@@ -321,13 +420,41 @@ int main(void) {
 '''
 
 
+TIMER_HARNESS = r'''
+#include <assert.h>
+#include "mock.h"
+uint8_t TR2, RCAP2H, RCAP2L, TH2, TL2, T2CON, T2MOD, TF2, ET2;
+static bool scan;
+void tick_dispatch(void) {
+    scan = !scan;
+    systick_arm(scan ? SYSTICK_SLOT_MATRIX_SCAN : SYSTICK_SLOT_LED_SUBFRAME);
+}
+#include "SYSTICK_PATH"
+int main(void) {
+    systick_init(); assert(systick_millis() == 0 && TR2 && ET2);
+    // Actual ISR accounting for alternating programmed 100/400-us intervals.
+    for (unsigned i = 0; i < 400; ++i) systick_interrupt_handler();
+    assert(systick_millis() == 100);
+    // Full 16-bit wrap, with atomic reads provided by the MCU's __critical.
+    for (unsigned i = 0; i < 262144; ++i) systick_interrupt_handler();
+    assert(systick_millis() == 100);
+    systick_pause(); assert(!ET2); systick_resume(); assert(ET2);
+    systick_init(); assert(systick_millis() == 0);
+}
+'''
+
+
 class BluetoothHostChecks(unittest.TestCase):
     def run_harness(self, source: str, extra_sources: list[str]):
         source = source.replace("REGISTERS", REGISTERS).replace("KB_PATH", str(SOURCE / "kb.c")).replace("RADIO_PATH", str(SOURCE / "radio.c"))
         with tempfile.TemporaryDirectory(prefix="rk61-bt-host-") as temp:
             directory = Path(temp)
+            # Copy verbatim so quoted platform headers resolve to register mocks.
+            timer = directory / "systick_under_test.c"
+            timer.write_text((ROOT / "smk/src/sino51lib/sh68f90/systick.c").read_text())
+            source = source.replace("SYSTICK_PATH", str(timer))
             (directory / "mock.h").write_text(MOCK_HEADER)
-            for name in ["kbdef.h", "report.h", "usb.h", "host.h", "delay.h", "watchdog.h"]:
+            for name in ["kbdef.h", "report.h", "usb.h", "host.h", "delay.h", "watchdog.h", "systick.h", "interrupts.h", "tick.h"]:
                 (directory / name).write_text('#include "mock.h"\n')
             (directory / "debug.h").write_text('#define dprintf(...) ((void)0)\n')
             (directory / "test.c").write_text(source)
@@ -335,6 +462,9 @@ class BluetoothHostChecks(unittest.TestCase):
                             "-I", temp, "-I", str(SOURCE), "-I", str(SOURCE.parent.parent), str(directory / "test.c"),
                             *extra_sources, "-o", str(directory / "test")], check=True)
             subprocess.run([str(directory / "test")], check=True)
+
+    def test_real_startup_clock(self):
+        self.run_harness(TIMER_HARNESS, [])
 
     def test_real_routing_and_pairing_guards(self):
         self.run_harness(ROUTING_HARNESS, [])

@@ -18,6 +18,13 @@ static uint16_t mode_debounce;
 static uint8_t  physical_state;
 static uint8_t  candidate_state;
 static uint8_t  last_bt_slot;
+// Retain the latest early report, including releases; do not replay startup taps.
+static uint8_t                   usb_pending_kind;
+static __xdata report_keyboard_t usb_pending_keyboard;
+static __xdata report_nkro_t     usb_pending_nkro;
+static uint16_t                  usb_consumer_usage, usb_system_usage;
+static uint8_t                   usb_extra_pending;
+static __xdata report_extra_t    usb_pending_extra;
 // Published atomically for the five-key LED gauge; selected route, not link confirmation.
 static volatile uint8_t          connection_colour;
 static __xdata report_keyboard_t blank_keyboard;
@@ -38,6 +45,10 @@ static void set_mode(bool wireless, uint8_t link)
         usb_send_report(&blank_keyboard);
         usb_send_nkro(&blank_nkro);
     }
+    usb_pending_kind   = 0;
+    usb_extra_pending  = 0;
+    usb_consumer_usage = usb_system_usage = 0;
+
     radio_mode        = wireless;
     radio_link        = wireless ? link : 0;
     connection_colour = wireless ? (link ? RK61_COLOUR_TEAL : RK61_COLOUR_ORANGE) : RK61_COLOUR_MAGENTA;
@@ -73,14 +84,18 @@ static void apply_physical_mode(void)
 void kb_init(void)
 {
     rk61_radio_init();
-    radio_mode        = false;
-    radio_link        = 0;
-    last_bt_slot      = 1; // RAM-only preference; do not alter the radio's bonds.
-    connection_colour = RK61_COLOUR_MAGENTA;
-    mode_debounce     = 0;
-    physical_state    = read_switches();
-    candidate_state   = physical_state;
+    radio_mode         = false;
+    radio_link         = 0;
+    last_bt_slot       = 1; // RAM-only preference; do not alter the radio's bonds.
+    connection_colour  = RK61_COLOUR_MAGENTA;
+    mode_debounce      = 0;
+    physical_state     = read_switches();
+    candidate_state    = physical_state;
+    usb_pending_kind   = 0;
+    usb_extra_pending  = 0;
+    usb_consumer_usage = usb_system_usage = 0;
     apply_physical_mode();
+    if (!radio_mode) rk61_radio_select(false);
 }
 
 void kb_update_switches(void)
@@ -136,8 +151,23 @@ bool kb_process_record(uint16_t keycode, bool pressed)
 
 void kb_update(void)
 {
-    if (radio_mode) {
-        rk61_radio_task();
+    rk61_radio_task(); // also completes deferred USB-mode notification
+    if (!radio_mode && usb_is_configured()) {
+        if (usb_pending_kind == 1 && !(EP1CON & _IEP1RDY)) {
+            usb_send_report(&usb_pending_keyboard);
+            usb_pending_kind = 0;
+        }
+        if (usb_pending_kind == 2 && !(EP2CON & _IEP2RDY)) {
+            usb_send_nkro(&usb_pending_nkro);
+            usb_pending_kind = 0;
+        }
+        if (usb_extra_pending && !(EP2CON & _IEP2RDY)) {
+            const bool consumer         = usb_extra_pending & 1u;
+            usb_pending_extra.report_id = consumer ? REPORT_ID_CONSUMER : REPORT_ID_SYSTEM;
+            usb_pending_extra.usage     = consumer ? usb_consumer_usage : usb_system_usage;
+            usb_send_extra(&usb_pending_extra);
+            usb_extra_pending &= consumer ? (uint8_t)~1u : (uint8_t)~2u;
+        }
     }
     rk61_radio_battery_task(); // battery sensing continues in wired mode too
 }
@@ -147,7 +177,12 @@ void kb_send_report(__xdata report_keyboard_t *report)
     if (radio_mode) {
         rk61_radio_keyboard(report);
     } else {
-        usb_send_report(report);
+        if (!usb_is_configured() || usb_pending_kind) {
+            usb_pending_keyboard = *report;
+            usb_pending_kind     = 1;
+        } else {
+            usb_send_report(report);
+        }
     }
 }
 
@@ -156,7 +191,12 @@ void kb_send_nkro(__xdata report_nkro_t *report)
     if (radio_mode) {
         rk61_radio_nkro(report);
     } else {
-        usb_send_nkro(report);
+        if (!usb_is_configured() || usb_pending_kind) {
+            usb_pending_nkro = *report;
+            usb_pending_kind = 2;
+        } else {
+            usb_send_nkro(report);
+        }
     }
 }
 
@@ -165,6 +205,17 @@ void kb_send_extra(__xdata report_extra_t *report)
     if (radio_mode) {
         rk61_radio_extra(report);
     } else {
-        usb_send_extra(report);
+        if (usb_is_configured()) {
+            usb_send_extra(report);
+            usb_extra_pending &= report->report_id == REPORT_ID_CONSUMER ? (uint8_t)~1u : (uint8_t)~2u;
+            return;
+        }
+        if (report->report_id == REPORT_ID_CONSUMER) {
+            usb_consumer_usage = report->usage;
+            usb_extra_pending |= 1;
+        } else {
+            usb_system_usage = report->usage;
+            usb_extra_pending |= 2;
+        }
     }
 }

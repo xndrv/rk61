@@ -22,6 +22,7 @@ keyboards += {
         },
     },
     'royalkludge-rk61-rf-test' : {
+        'args' : ['-DUSB_START_WITHOUT_ENUM_WAIT'],
         'dir' : kb_dir,
         'platform' : 'sh68f90',
         'src' : files(

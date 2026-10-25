@@ -148,7 +148,7 @@ foreach keyboard, board : keyboards
         src_main = src_smk + src_libc + spec['src']
         inc_dirs = inc_base + [spec['dir']]
 
-        cc_args = cc_base_args + platform_cc_args + [
+        cc_args = cc_base_args + platform_cc_args + board.get('args', []) + [
             '-DWATCHDOG_ENABLE=@0@'.format(options['watchdog_enable']),
             '-DUSB_VID=@0@'.format(options['vendor_id']),
             '-DUSB_PID=@0@'.format(options['product_id']),
